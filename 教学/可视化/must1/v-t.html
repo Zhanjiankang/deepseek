@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小车速度实验分析 - 物含妙理</title>
+    
+    <!-- 引入相同的CSS库 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/regression@2.0.1/dist/regression.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #1565c0;
+            --primary-gradient: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+            --secondary-color: #37474f;
+            --accent-color: #ff6b6b;
+            --success-color: #2ecc71;
+            --light-blue: #e3f2fd;
+            --lighter-blue: #f5faff;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --text-dark: #263238;
+            --text-gray: #607d8b;
+            --shadow-light: 0 8px 25px rgba(30, 136, 229, 0.08);
+            --shadow-medium: 0 12px 30px rgba(30, 136, 229, 0.12);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5faff 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', 'Segoe UI', 'PingFang SC', sans-serif;
+            padding: 20px;
+            color: var(--text-dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 背景装饰元素 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0) 70%);
+            z-index: -1;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(100, 181, 246, 0.05) 0%, rgba(100, 181, 246, 0) 70%);
+            z-index: -1;
+        }
+        
+        /* 水印 */
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            opacity: 0.1;
+            font-size: 60px;
+            color: var(--primary-color);
+            z-index: 9999;
+            pointer-events: none;
+            font-weight: bold;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* 页面头部 */
+        .header {
+            background: var(--white);
+            color: var(--text-dark);
+            padding: 0;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 25px;
+            border-radius: 16px;
+            position: relative;
+            z-index: 1050;
+            overflow: visible;
+            border: none;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .navbar {
+            padding: 1.2rem 2rem;
+            background: var(--white) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--primary-color) !important;
+            transition: all 0.3s ease;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-dark) !important;
+            transform: translateY(-2px);
+        }
+        
+        .navbar-brand i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .date-display {
+            font-size: 1rem;
+            color: var(--white);
+            margin-bottom: 0;
+            white-space: nowrap;
+            font-weight: 500;
+            background: var(--primary-gradient);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+        }
+        
+        .section-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+        
+        .section-toolbar .btn {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(30, 136, 229, 0.3);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-toolbar .btn:hover {
+            background: rgba(30, 136, 229, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.15);
+            color: var(--primary-color);
+        }
+        
+        /* 主容器 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            padding: 15px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .content-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        /* 输入区域 */
+        .input-section {
+            flex: 1;
+            min-width: 400px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .input-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(30, 136, 229, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 15px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(30, 136, 229, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            background-color: var(--light-gray);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+            background-color: var(--white);
+        }
+        
+        textarea.form-control {
+            height: 150px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        .form-hint {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-hint i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn-action {
+            background: var(--primary-gradient);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);
+            font-size: 1.05rem;
+            min-width: 160px;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
+            color: var(--white);
+        }
+        
+        .btn-action:disabled {
+            background: var(--text-gray);
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-action-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);
+        }
+        
+        .btn-action-success:hover {
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-action-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+        }
+        
+        .btn-action-warning:hover {
+            box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-action i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        /* 结果区域 */
+        .result-section {
+            flex: 2;
+            min-width: 500px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.8s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .result-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .formula-container {
+            text-align: center;
+            margin: 20px 0 30px;
+            font-size: 1.2rem;
+            font-style: italic;
+            padding: 20px;
+            background: rgba(30, 136, 229, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+        }
+        
+        .data-table th {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(30, 136, 229, 0.2);
+        }
+        
+        .data-table td {
+            border: 1px solid rgba(30, 136, 229, 0.1);
+            padding: 12px 15px;
+            text-align: center;
+            color: var(--text-dark);
+            background-color: var(--white);
+        }
+        
+        .data-table tr:hover td {
+            background-color: rgba(30, 136, 229, 0.05);
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+            flex-grow: 1;
+            background-color: var(--light-gray);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* 结论区域 */
+        .conclusion-container {
+            margin-top: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(46, 204, 113, 0.05) 100%);
+            border-left: 4px solid var(--success-color);
+            border-radius: 12px;
+            max-width: 100%;
+        }
+        
+        .conclusion-title {
+            color: var(--success-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.4rem;
+        }
+        
+        .conclusion-title i {
+            margin-right: 10px;
+        }
+        
+        .conclusion-content {
+            color: var(--text-dark);
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+        
+        .conclusion-content p {
+            margin-bottom: 12px;
+        }
+        
+        .formula-result {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        
+        /* 状态消息 */
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: rgba(46, 204, 113, 0.1);
+            border-left-color: var(--success-color);
+            color: #2d7a53;
+        }
+        
+        .status-info {
+            background: rgba(30, 136, 229, 0.1);
+            border-left-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+        
+        .status-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left-color: #ff9800;
+            color: #e65100;
+        }
+        
+        /* 数据点数显示 */
+        .points-count {
+            margin-top: 10px;
+            padding: 12px 15px;
+            background: rgba(30, 136, 229, 0.05);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .points-count i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 页脚 */
+        footer {
+            padding: 1.5rem 0;
+            background: var(--white);
+            color: var(--text-dark);
+            text-align: center;
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            .content-container {
+                flex-direction: column;
+            }
+            
+            .input-section, .result-section {
+                min-width: 100%;
+            }
+            
+            .button-group {
+                justify-content: center;
+            }
+            
+            .btn-action {
+                flex: 1;
+                min-width: auto;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .btn-action {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn-action {
+                width: 100%;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .data-table th, .data-table td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .formula-container {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 水印 -->
+    <div class="watermark">物含妙理</div>
+    
+    <!-- 页面头部 -->
+    <div class="header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="fas fa-car me-2"></i>小车速度实验分析</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
+                    <!-- 导航菜单已移除 -->
+                </div>
+                <div class="date-display" id="currentDate">----年--月--日 星期-</div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-container">
+        <!-- 返回按钮 -->
+        <div class="section-toolbar">
+            <button class="btn" type="button" onclick="window.history.back();">
+                <i class="fas fa-arrow-left me-2"></i>返回上一层
+            </button>
+        </div>
+        
+        <!-- 页面标题 -->
+        <h1 class="page-title">实验：探究小车速度随时间变化的规律</h1>
+        
+        <div class="content-container">
+            <!-- 输入区域 -->
+            <div class="input-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-clipboard-list"></i> 输入实验数据
+                    </h2>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">相邻计数点时间间隔 (单位: 0.02秒):</label>
+                    <input type="number" id="timeInterval" class="form-control" min="1" value="5">
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i> 通常为5个间隔，即0.1秒
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">计数点位置 (米，用逗号或空格分隔):</label>
+                    <textarea id="positionsInput" class="form-control" placeholder="例如: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8">0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8</textarea>
+                    <div class="form-hint">
+                        <i class="fas fa-lightbulb"></i> 示例数据: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8
+                    </div>
+                </div>
+                
+                <div id="pointsCount" class="points-count">
+                    <i class="fas fa-database"></i> 检测到 8 个有效数据点
+                </div>
+                
+                <div class="button-group">
+                    <button id="calculateBtn" class="btn-action">
+                        <i class="fas fa-calculator"></i> 计算速度
+                    </button>
+                    <button id="drawChartBtn" class="btn-action btn-action-success" disabled>
+                        <i class="fas fa-chart-line"></i> v-t图像
+                    </button>
+                    <button id="linearFitBtn" class="btn-action btn-action-warning" disabled>
+                        <i class="fas fa-ruler-combined"></i> 线性拟合
+                    </button>
+                </div>
+                
+                <div id="statusMessage" class="status-message"></div>
+                
+                <!-- 分析结果 -->
+                <div id="conclusion" class="conclusion-container" style="display: none;">
+                    <h3 class="conclusion-title">
+                        <i class="fas fa-chart-bar"></i> 分析结果
+                    </h3>
+                    <div class="conclusion-content">
+                        <p id="resultEquation"></p>
+                        <p id="resultAcceleration"></p>
+                        <p id="resultConclusion"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 结果区域 -->
+            <div class="result-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-flask"></i> 实验结果
+                    </h2>
+                </div>
+                
+                <div class="formula-container">
+                    $$ v = \frac{\Delta x_2 + \Delta x_1}{2T} $$
+                </div>
+                
+                <div class="result-content">
+                    <div class="table-container">
+                        <div id="resultTable"></div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="velocityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer id="about">
+        <div class="container">
+            <p class="mb-0" style="color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-atom me-2"></i>© 2025 物含妙理 | 小车速度实验分析系统
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 更新日期显示
+        function updateDateDisplay() {
+            try {
+                const now = new Date();
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                const dateDisplay = document.getElementById('currentDate');
+                if (dateDisplay) {
+                    dateDisplay.textContent = 
+                        `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${weekDays[now.getDay()]}`;
+                }
+            } catch (error) {
+                console.error("更新日期显示时出错:", error);
+            }
+        }
+        
+        // 页面加载完成后更新日期
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateDisplay();
+        });
+        
+        // 全局变量
+        let velocityChart = null;
+        let currentTimePoints = [];
+        let currentVelocities = [];
+        let currentPositions = [];
+        
+        // 按钮事件监听
+        document.getElementById('calculateBtn').addEventListener('click', calculateVelocities);
+        document.getElementById('drawChartBtn').addEventListener('click', drawChart);
+        document.getElementById('linearFitBtn').addEventListener('click', performLinearFit);
+        document.getElementById('positionsInput').addEventListener('input', updatePointsCount);
+        
+        // 初始化时更新点数显示
+        updatePointsCount();
+        
+        function showStatusMessage(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+        }
+        
+        function hideStatusMessage() {
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+        
+        function updatePointsCount() {
+            const inputText = document.getElementById('positionsInput').value;
+            const positions = parsePositionsInput(inputText);
+            const validPositions = positions.filter(pos => !isNaN(pos));
+            const count = validPositions.length;
+            
+            const pointsCountEl = document.getElementById('pointsCount');
+            if (count > 0) {
+                pointsCountEl.innerHTML = `<i class="fas fa-database"></i> 检测到 ${count} 个有效数据点`;
+                pointsCountEl.style.color = '#2ecc71';
+                pointsCountEl.style.borderLeftColor = '#2ecc71';
+            } else {
+                pointsCountEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 请输入有效的位置数据';
+                pointsCountEl.style.color = '#ff6b6b';
+                pointsCountEl.style.borderLeftColor = '#ff6b6b';
+            }
+        }
+        
+        function parsePositionsInput(input) {
+            // 替换中文逗号为英文逗号
+            input = input.replace(/，/g, ',');
+            // 分割输入并过滤空值
+            const values = input.split(/[\s,]+/).filter(val => val.trim() !== '');
+            // 转换为数字
+            return values.map(val => parseFloat(val));
+        }
+        
+        function calculateVelocities() {
+            hideStatusMessage();
+            
+            // 获取输入数据
+            const n = parseInt(document.getElementById('timeInterval').value);
+            if (isNaN(n) || n <= 0) {
+                showStatusMessage("请输入有效的时间间隔（正整数）", "warning");
+                return;
+            }
+            
+            const inputText = document.getElementById('positionsInput').value;
+            if (!inputText.trim()) {
+                showStatusMessage("请输入计数点位置数据", "warning");
+                return;
+            }
+            
+            currentPositions = parsePositionsInput(inputText);
+            
+            // 验证数据
+            if (currentPositions.length < 3) {
+                showStatusMessage("至少需要3个计数点位置才能计算速度", "warning");
+                return;
+            }
+            
+            // 检查是否有无效数值
+            for (let i = 0; i < currentPositions.length; i++) {
+                if (isNaN(currentPositions[i])) {
+                    showStatusMessage(`第${i+1}个位置数据无效，请输入数字`, "warning");
+                    return;
+                }
+            }
+            
+            // 计算时间间隔
+            const delta_t = n * 0.02;
+            
+            // 计算速度
+            currentVelocities = [];
+            currentTimePoints = [];
+            
+            for (let i = 1; i < currentPositions.length - 1; i++) {
+                const delta_s = currentPositions[i+1] - currentPositions[i-1];
+                const total_time = 2 * delta_t;
+                const v = delta_s / total_time;
+                currentVelocities.push(v);
+                currentTimePoints.push(i * delta_t);
+            }
+            
+            // 显示数据表格
+            displayDataTable(currentPositions, currentVelocities);
+            
+            // 启用其他按钮
+            document.getElementById('drawChartBtn').disabled = false;
+            document.getElementById('linearFitBtn').disabled = true;
+            
+            // 清除图表和结论
+            if (velocityChart) {
+                velocityChart.destroy();
+                velocityChart = null;
+            }
+            document.getElementById('conclusion').style.display = 'none';
+            
+            showStatusMessage("速度计算完成！现在可以点击'v-t图像'按钮查看图表", "success");
+            
+            // 重新渲染MathJax公式
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+        
+        function displayDataTable(positions, velocities) {
+            // 生成计数点编号：0, 1, 2, ...
+            const pointNumbers = Array.from({length: positions.length}, (_, i) => i);
+            
+            let tableHTML = `
+                <table class="data-table">
+                    <tr>
+                        <th>计数点:</th>
+                        ${pointNumbers.map(num => `<th>${num}</th>`).join('')}
+                    </tr>
+                    <tr>
+                        <th>位置(m):</th>
+                        ${positions.map(p => `<td>${p.toFixed(3)}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <th>速度(m/s):</th>
+                        <td>*</td>
+                        ${velocities.map(v => `<td>${v.toFixed(3)}</td>`).join('')}
+                        <td>*</td>
+                    </tr>
+                </table>
+            `;
+            
+            document.getElementById('resultTable').innerHTML = tableHTML;
+            
+            // 重新渲染MathJax公式
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+        
+        function drawChart() {
+            hideStatusMessage();
+            
+            if (currentTimePoints.length === 0 || currentVelocities.length === 0) {
+                showStatusMessage("请先计算速度数据", "info");
+                return;
+            }
+            
+            const ctx = document.getElementById('velocityChart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (velocityChart) {
+                velocityChart.destroy();
+            }
+            
+            // 创建新图表
+            velocityChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '速度数据',
+                        data: currentTimePoints.map((t, i) => ({x: t, y: currentVelocities[i]})),
+                        backgroundColor: 'rgba(30, 136, 229, 0.8)',
+                        borderColor: 'rgba(30, 136, 229, 1)',
+                        pointRadius: 8,
+                        pointHoverRadius: 12,
+                        pointBorderWidth: 2,
+                        pointBorderColor: 'rgba(255, 255, 255, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间 t(s)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#263238'
+                            },
+                            min: 0,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                color: '#607d8b'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '速度 v(m/s)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#263238'
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                color: '#607d8b'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'v-t 图像',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            color: '#1e88e5',
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#263238'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1e88e5',
+                            bodyColor: '#263238',
+                            borderColor: '#1e88e5',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return `时间: ${context.parsed.x.toFixed(3)}s, 速度: ${context.parsed.y.toFixed(3)}m/s`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 启用线性拟合按钮
+            document.getElementById('linearFitBtn').disabled = false;
+            
+            showStatusMessage("v-t图像已生成！现在可以点击'线性拟合'按钮进行拟合分析", "success");
+        }
+        
+        function performLinearFit() {
+            hideStatusMessage();
+            
+            if (!velocityChart) {
+                showStatusMessage("请先生成v-t图像", "info");
+                return;
+            }
+            
+            if (currentTimePoints.length === 0) return;
+            
+            // 使用回归库进行线性拟合
+            const data = currentTimePoints.map((t, i) => [t, currentVelocities[i]]);
+            const result = regression.linear(data);
+            
+            const slope = result.equation[0];
+            const intercept = result.equation[1];
+            const r2 = result.r2;
+            
+            // 计算y轴交点（t=0时的速度，即初速度）
+            const yIntercept = intercept;
+            
+            // 显示结论
+            document.getElementById('conclusion').style.display = 'block';
+            document.getElementById('resultEquation').innerHTML = `拟合方程: $$ v = ${slope.toFixed(4)}t + ${intercept.toFixed(4)} $$`;
+            document.getElementById('resultAcceleration').innerHTML = `加速度: $$ a = ${slope.toFixed(4)} \\, m/s^2 $$`;
+            document.getElementById('resultConclusion').innerHTML = `通过直接分析图象的特点得到小车运动的v-t图象是一条倾斜的直线，那么当时间增加相同的值Δt时，速度也会增加相同的值Δv。可以得出结论：小车的速度随时间均匀增加（或变化）。`;
+            
+            // 添加拟合线到图表
+            addFitLineToChart(result);
+            
+            showStatusMessage("线性拟合完成！", "success");
+            
+            // 重新渲染MathJax公式
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+        
+        function addFitLineToChart(result) {
+            if (!velocityChart) return;
+            
+            // 检查是否已存在拟合线
+            if (velocityChart.data.datasets.length > 1) {
+                // 移除之前的拟合线
+                velocityChart.data.datasets.splice(1, 1);
+            }
+            
+            // 生成拟合线上的点 - 延伸到y轴(x=0)
+            const xMin = 0; // 从y轴开始
+            const xMax = Math.max(...velocityChart.data.datasets[0].data.map(d => d.x));
+            
+            const fitData = [
+                {x: xMin, y: result.equation[0] * xMin + result.equation[1]},
+                {x: xMax, y: result.equation[0] * xMax + result.equation[1]}
+            ];
+            
+            velocityChart.data.datasets.push({
+                label: `线性拟合: v = ${result.equation[0].toFixed(4)}t + ${result.equation[1].toFixed(4)}`,
+                data: fitData,
+                backgroundColor: 'rgba(255, 99, 132, 0)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                pointRadius: 0,
+                borderWidth: 3,
+                borderDash: [5, 5],
+                fill: false,
+                showLine: true,
+                type: 'line'
+            });
+            
+            velocityChart.update();
+        }
+    </script>
+    
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

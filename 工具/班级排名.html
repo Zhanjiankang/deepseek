@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级成绩排名趋势系统 - 物含妙理</title>
+    
+    <!-- 引入相同的CSS库 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #1565c0;
+            --primary-gradient: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+            --secondary-color: #37474f;
+            --accent-color: #ff6b6b;
+            --success-color: #2ecc71;
+            --light-blue: #e3f2fd;
+            --lighter-blue: #f5faff;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --text-dark: #263238;
+            --text-gray: #607d8b;
+            --shadow-light: 0 8px 25px rgba(30, 136, 229, 0.08);
+            --shadow-medium: 0 12px 30px rgba(30, 136, 229, 0.12);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5faff 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', 'Segoe UI', 'PingFang SC', sans-serif;
+            padding: 20px;
+            color: var(--text-dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 背景装饰元素 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0) 70%);
+            z-index: -1;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(100, 181, 246, 0.05) 0%, rgba(100, 181, 246, 0) 70%);
+            z-index: -1;
+        }
+        
+        .header {
+            background: var(--white);
+            color: var(--text-dark);
+            padding: 0;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 25px;
+            border-radius: 16px;
+            position: relative;
+            z-index: 1050;
+            overflow: visible;
+            border: none;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .navbar {
+            padding: 1.2rem 2rem;
+            background: var(--white) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--primary-color) !important;
+            transition: all 0.3s ease;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-dark) !important;
+            transform: translateY(-2px);
+        }
+        
+        .navbar-brand i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .date-display {
+            font-size: 1rem;
+            color: var(--white);
+            margin-bottom: 0;
+            white-space: nowrap;
+            font-weight: 500;
+            background: var(--primary-gradient);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+        }
+        
+        .section-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+        
+        .section-toolbar .btn {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(30, 136, 229, 0.3);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-toolbar .btn:hover {
+            background: rgba(30, 136, 229, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.15);
+            color: var(--primary-color);
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(30, 136, 229, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chart-title i {
+            margin-right: 15px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .chart-subtitle {
+            color: var(--text-gray);
+            font-size: 1rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chart-subtitle i {
+            margin-right: 8px;
+            color: var(--accent-color);
+        }
+        
+        /* 功能按钮组 */
+        .btn-group-custom {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-custom {
+            background: var(--primary-gradient);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
+            color: var(--white);
+        }
+        
+        .btn-custom:disabled {
+            background: var(--text-gray);
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-custom-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);
+        }
+        
+        .btn-custom-success:hover {
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-custom-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+        }
+        
+        .btn-custom-danger:hover {
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-custom i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        /* 图表主区域 */
+        #chart-main {
+            width: 100%;
+            height: 750px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+            background-color: var(--white);
+        }
+        
+        /* 文件上传输入框样式 */
+        #excel-file {
+            display: none;
+        }
+        
+        .file-upload-label {
+            cursor: pointer;
+        }
+        
+        /* 状态提示 */
+        .status-tip {
+            font-size: 0.95rem;
+            color: var(--text-gray);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            background: rgba(30, 136, 229, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .status-tip i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        /* 加载状态 */
+        .loading-spinner {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .loading-spinner .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner p {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        footer {
+            padding: 1.5rem 0;
+            background: var(--white);
+            color: var(--text-dark);
+            text-align: center;
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 992px) {
+            #chart-main {
+                height: 600px;
+            }
+            
+            .btn-group-custom {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-custom {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            #chart-main {
+                height: 500px;
+            }
+            
+            .section-toolbar {
+                justify-content: stretch;
+            }
+            
+            .section-toolbar .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .chart-container {
+                padding: 20px;
+            }
+            
+            .chart-title {
+                font-size: 1.4rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.4rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            #chart-main {
+                height: 400px;
+            }
+            
+            .chart-title {
+                font-size: 1.3rem;
+            }
+            
+            .btn-custom {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 错误消息样式 */
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+            border-radius: 16px;
+            border-left: 4px solid var(--accent-color);
+            color: #d32f2f;
+            font-weight: 500;
+        }
+        
+        .error-message i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部 -->
+    <div class="header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="fas fa-chart-line me-2"></i>班级成绩排名趋势系统</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
+                    <!-- 导航菜单已移除 -->
+                </div>
+                <div class="date-display" id="currentDate">----年--月--日 星期-</div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container">
+        <!-- 返回按钮 -->
+        <div class="section-toolbar">
+            <button class="btn" type="button" onclick="window.history.back();">
+                <i class="fas fa-arrow-left me-2"></i>返回上一层
+            </button>
+        </div>
+        
+        <!-- 图表容器 -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title-area">
+                    <h1 class="chart-title">
+                        <i class="fas fa-chart-line"></i> 班级排名趋势分析
+                    </h1>
+                    <div class="chart-subtitle">
+                        <i class="fas fa-info-circle"></i> 说明：仅供内部参考，不得传播。
+                    </div>
+                </div>
+                
+                <!-- 功能按钮组 -->
+                <div class="btn-group-custom">
+                    <!-- 上传Excel文件按钮 -->
+                    <label for="excel-file" class="btn-custom file-upload-label">
+                        <i class="fas fa-file-upload"></i> 上传 Excel
+                    </label>
+                    <input type="file" id="excel-file" accept=".xlsx, .xls" onchange="handleFile(this)" />
+                    
+                    <!-- 显示前10名按钮 -->
+                    <button class="btn-custom btn-custom-success" id="btn-top10" onclick="showTop10()" disabled>
+                        <i class="fas fa-trophy"></i> 显示前10名
+                    </button>
+                    
+                    <!-- 下载PDF按钮 -->
+                    <button class="btn-custom btn-custom-danger" id="btn-pdf" onclick="downloadPDF()" disabled>
+                        <i class="fas fa-file-pdf"></i> 下载 PDF
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 状态提示 -->
+            <div class="status-tip">
+                <i class="fas fa-lightbulb"></i> 
+                <span id="status-text">请先上传Excel数据文件以生成排名趋势图表。Excel文件应包含"姓名"列和各次考试的排名数据。</span>
+            </div>
+            
+            <!-- 错误消息 -->
+            <div id="errorMessage" class="error-message d-none">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span id="errorText">加载内容时出现错误</span>
+            </div>
+            
+            <!-- 图表主区域 -->
+            <div id="chart-main"></div>
+            
+            <!-- 加载状态指示器 -->
+            <div id="loadingIndicator" class="loading-spinner d-none">
+                <div class="spinner-border" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">加载中...</span>
+                </div>
+                <p class="mt-3">正在加载和解析数据...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer id="about">
+        <div class="container">
+            <p class="mb-0" style="color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-atom me-2"></i>© 2025 物含妙理 | 班级成绩排名趋势分析系统
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化图表
+        var chartDom = document.getElementById('chart-main');
+        var myChart = echarts.init(chartDom);
+        
+        // 全局变量
+        var globalSeriesData = []; 
+        var globalStudentNames = [];
+        var lastExamName = ""; 
+        
+        // 初始化选项
+        var option = { 
+            title: { 
+                text: '请先上传数据文件...', 
+                left: 'center', 
+                top: 'center', 
+                textStyle: { 
+                    color: '#ccc',
+                    fontSize: 20,
+                    fontWeight: 'normal'
+                } 
+            },
+            backgroundColor: 'transparent'
+        };
+        myChart.setOption(option);
+        
+        // 更新日期显示
+        function updateDateDisplay() {
+            try {
+                const now = new Date();
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                const dateDisplay = document.getElementById('currentDate');
+                if (dateDisplay) {
+                    dateDisplay.textContent = 
+                        `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${weekDays[now.getDay()]}`;
+                }
+            } catch (error) {
+                console.error("更新日期显示时出错:", error);
+            }
+        }
+        
+        // 显示错误消息
+        function showErrorMessage(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            if (loadingIndicator) loadingIndicator.classList.add('d-none');
+            if (errorText) errorText.textContent = message;
+            if (errorMessage) errorMessage.classList.remove('d-none');
+        }
+        
+        // 隐藏错误消息
+        function hideErrorMessage() {
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) errorMessage.classList.add('d-none');
+        }
+        
+        // 页面加载完成后更新日期
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateDisplay();
+        });
+        
+        // 处理文件上传
+        function handleFile(input) {
+            if (!input || !input.files || input.files.length === 0) {
+                showErrorMessage("请选择文件");
+                return;
+            }
+            
+            var file = input.files[0];
+            if (!file) {
+                showErrorMessage("未选择文件");
+                return;
+            }
+            
+            // 验证文件类型
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls'].includes(fileExt)) {
+                showErrorMessage("请上传Excel文件（.xlsx或.xls格式）");
+                return;
+            }
+            
+            // 显示加载状态
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+            
+            hideErrorMessage();
+            document.getElementById('status-text').textContent = "正在解析Excel文件，请稍候...";
+            
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    var data = new Uint8Array(e.target.result);
+                    var workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // 检查是否有工作表
+                    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                        throw new Error("Excel文件中没有工作表");
+                    }
+                    
+                    var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    var json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    // 隐藏加载状态
+                    if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                    
+                    // 检查数据是否为空
+                    if (!json || json.length === 0) {
+                        showErrorMessage("Excel文件为空或格式不正确");
+                        return;
+                    }
+                    
+                    // 查找包含"姓名"的标题行
+                    var headerIndex = -1;
+                    for(var i = 0; i < Math.min(20, json.length); i++) {
+                        if (!json[i]) continue;
+                        
+                        // 将行转换为字符串进行检查
+                        const rowString = JSON.stringify(json[i]).toLowerCase();
+                        if (rowString.includes("姓名")) { 
+                            headerIndex = i; 
+                            break; 
+                        }
+                    }
+                    
+                    if(headerIndex === -1) { 
+                        showErrorMessage("Excel文件格式错误：未找到包含'姓名'的列");
+                        return; 
+                    }
+                    
+                    var headerRow = json[headerIndex];
+                    
+                    // 查找姓名列索引
+                    var nameColIndex = -1;
+                    for(var j = 0; j < headerRow.length; j++) {
+                        if (headerRow[j] && String(headerRow[j]).toLowerCase().includes("姓名")) {
+                            nameColIndex = j;
+                            break;
+                        }
+                    }
+                    
+                    if (nameColIndex === -1) {
+                        showErrorMessage("Excel文件格式错误：未找到'姓名'列");
+                        return;
+                    }
+                    
+                    // 提取考试名称（X轴数据）
+                    var xData = [];
+                    var colIndexes = [];
+                    for(var k = nameColIndex + 1; k < headerRow.length; k++) {
+                        if (headerRow[k] && String(headerRow[k]).trim() !== "") {
+                            xData.push(String(headerRow[k]).trim());
+                            colIndexes.push(k);
+                        }
+                    }
+                    
+                    if (xData.length === 0) {
+                        showErrorMessage("Excel文件格式错误：未找到考试数据列");
+                        return;
+                    }
+                    
+                    if (xData.length > 0) { 
+                        lastExamName = xData[xData.length - 1]; 
+                    }
+                    
+                    var lastExamColIndex = colIndexes[colIndexes.length - 1];
+                    
+                    // 重置全局数据
+                    globalSeriesData = [];
+                    globalStudentNames = [];
+                    
+                    // 提取学生数据
+                    for(var i = headerIndex + 1; i < json.length; i++) {
+                        var row = json[i];
+                        if (!row || row.length === 0) continue;
+                        
+                        var name = row[nameColIndex];
+                        if (!name || String(name).trim() === "") continue;
+                        
+                        var scores = [];
+                        var hasValidScore = false;
+                        
+                        // 提取每次考试的排名
+                        colIndexes.forEach(idx => {
+                            var val = row[idx];
+                            var numVal = parseFloat(val);
+                            // 检查是否为有效数字，并且是正整数
+                            if (!isNaN(numVal) && Number.isInteger(numVal) && numVal > 0) {
+                                scores.push(numVal);
+                                hasValidScore = true;
+                            } else {
+                                scores.push(null);
+                            }
+                        });
+                        
+                        if (!hasValidScore) continue;
+                        
+                        // 获取最后一次考试的排名
+                        var lastRankVal = parseFloat(row[lastExamColIndex]);
+                        if (isNaN(lastRankVal) || !Number.isInteger(lastRankVal) || lastRankVal <= 0) { 
+                            lastRankVal = 99999; 
+                        }
+                        
+                        // 为每位学生生成不同颜色
+                        var colorIndex = globalSeriesData.length % 10;
+                        var colors = [
+                            '#1e88e5', '#e53935', '#43a047', '#fb8c00', 
+                            '#8e24aa', '#00acc1', '#f4511e', '#3949ab', 
+                            '#5e35b1', '#00897b'
+                        ];
+                        
+                        globalSeriesData.push({
+                            name: String(name).trim(), 
+                            type: 'line', 
+                            smooth: true, 
+                            symbolSize: 8, 
+                            lineStyle: { 
+                                width: 3,
+                                color: colors[colorIndex]
+                            },
+                            itemStyle: {
+                                color: colors[colorIndex]
+                            },
+                            data: scores, 
+                            _lastRank: lastRankVal 
+                        });
+                        globalStudentNames.push(String(name).trim());
+                    }
+                    
+                    if (globalSeriesData.length === 0) {
+                        showErrorMessage("未找到有效的学生数据");
+                        return;
+                    }
+                    
+                    // 初始化图例选择状态
+                    var selectedMap = {};
+                    globalStudentNames.forEach(name => selectedMap[name] = false);
+                    
+                    // 更新按钮文本
+                    const btnTop10 = document.getElementById('btn-top10');
+                    if (btnTop10) {
+                        btnTop10.innerHTML = `<i class="fas fa-trophy"></i> 显示前10名 (${lastExamName})`;
+                    }
+                    
+                    // 更新状态文本
+                    document.getElementById('status-text').textContent = 
+                        `已成功加载 ${globalSeriesData.length} 名学生的数据，包含 ${xData.length} 次考试排名。`;
+                    
+                    // 设置图表选项
+                    myChart.clear();
+                    myChart.setOption({
+                        title: { 
+                            text: `班级排名趋势分析 (${globalSeriesData.length}人)`,
+                            left: 'center',
+                            textStyle: {
+                                color: '#263238',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            }
+                        },
+                        tooltip: { 
+                            trigger: 'axis', 
+                            order: 'valueAsc',
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            borderColor: '#1e88e5',
+                            borderWidth: 1,
+                            textStyle: {
+                                color: '#263238'
+                            }
+                        },
+                        legend: {
+                            type: 'scroll', 
+                            orient: 'vertical', 
+                            right: 10, 
+                            top: 50, 
+                            bottom: 50,
+                            selected: selectedMap, 
+                            selector: true,
+                            textStyle: {
+                                color: '#263238'
+                            }
+                        },
+                        // 缩放配置
+                        dataZoom: [
+                            {
+                                type: 'slider', 
+                                show: true,
+                                xAxisIndex: [0],
+                                bottom: 10,
+                                backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                                borderColor: 'rgba(30, 136, 229, 0.3)',
+                                fillerColor: 'rgba(30, 136, 229, 0.2)'
+                            },
+                            {
+                                type: 'slider', 
+                                show: true,
+                                yAxisIndex: [0],
+                                left: 10,
+                                backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                                borderColor: 'rgba(30, 136, 229, 0.3)',
+                                fillerColor: 'rgba(30, 136, 229, 0.2)'
+                            },
+                            {
+                                type: 'inside', 
+                                xAxisIndex: [0], 
+                                zoomOnMouseWheel: true,
+                                moveOnMouseMove: true
+                            }
+                        ],
+                        grid: { 
+                            right: 160, 
+                            left: 60,   
+                            bottom: 80, 
+                            top: 60, 
+                            containLabel: true,
+                            backgroundColor: 'rgba(255, 255, 255, 0.8)'
+                        },
+                        xAxis: { 
+                            type: 'category', 
+                            boundaryGap: false, 
+                            data: xData,
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#607d8b'
+                                }
+                            },
+                            axisLabel: {
+                                color: '#263238',
+                                rotate: 45 // 如果考试名称太长可以旋转
+                            }
+                        },
+                        yAxis: { 
+                            type: 'value', 
+                            inverse: true, 
+                            minInterval: 1, 
+                            name: '排名',
+                            nameTextStyle: {
+                                color: '#263238'
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#607d8b'
+                                }
+                            },
+                            axisLabel: {
+                                color: '#263238'
+                            },
+                            splitLine: {
+                                lineStyle: {
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    type: 'dashed'
+                                }
+                            }
+                        },
+                        series: globalSeriesData,
+                        backgroundColor: 'transparent'
+                    });
+                    
+                    // 启用按钮
+                    document.getElementById('btn-top10').disabled = false;
+                    document.getElementById('btn-pdf').disabled = false;
+                    
+                    // 调整图表大小
+                    myChart.resize();
+                    
+                } catch (err) { 
+                    // 隐藏加载状态
+                    const loadingIndicator = document.getElementById('loadingIndicator');
+                    if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                    
+                    document.getElementById('status-text').textContent = "解析文件时出现错误，请检查文件格式。";
+                    showErrorMessage("解析出错：" + (err.message || "未知错误"));
+                    console.error("Excel解析错误:", err);
+                }
+            };
+            
+            reader.onerror = function(e) {
+                // 隐藏加载状态
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                
+                document.getElementById('status-text').textContent = "读取文件时出现错误。";
+                showErrorMessage("读取文件失败，请重试");
+                console.error("文件读取错误:", e);
+            };
+            
+            // 开始读取文件
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // 显示前10名
+        function showTop10() {
+            if (!globalSeriesData || globalSeriesData.length === 0) {
+                showErrorMessage("没有可用的数据");
+                return;
+            }
+            
+            // 按最后一次考试排名排序
+            var sortedList = [].concat(globalSeriesData).sort(function(a, b) {
+                return a._lastRank - b._lastRank;
+            });
+            
+            var top10Names = [];
+            var count = 0;
+            
+            // 获取前10名学生
+            for(var i = 0; i < sortedList.length; i++) {
+                if (sortedList[i]._lastRank === 99999) continue; 
+                top10Names.push(sortedList[i].name);
+                count++;
+                if(count >= 10) break;
+            }
+            
+            // 更新图例选择状态，只显示前10名
+            var newSelectedMap = {};
+            globalStudentNames.forEach(function(name) {
+                newSelectedMap[name] = (top10Names.indexOf(name) !== -1);
+            });
+            
+            // 更新图表
+            myChart.setOption({ legend: { selected: newSelectedMap } });
+            
+            // 更新状态文本
+            document.getElementById('status-text').textContent = 
+                `已显示 "${lastExamName}" 考试排名前10位的同学。`;
+        }
+        
+        // 下载PDF
+        function downloadPDF() {
+            if (!globalSeriesData || globalSeriesData.length === 0) {
+                showErrorMessage("没有可用的数据");
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                
+                if (!jsPDF) {
+                    showErrorMessage("PDF库加载失败，请刷新页面重试");
+                    return;
+                }
+                
+                // 获取图表图片数据
+                var imgData = myChart.getDataURL({ 
+                    type: 'png', 
+                    pixelRatio: 2, 
+                    backgroundColor: '#ffffff' 
+                });
+                
+                // 创建PDF
+                var pdf = new jsPDF('l', 'mm', 'a4');
+                var w = pdf.internal.pageSize.getWidth();
+                var h = pdf.internal.pageSize.getHeight();
+                var chartRatio = myChart.getHeight() / myChart.getWidth();
+                
+                // 计算图片尺寸
+                var imgW = w - 20; 
+                var imgH = imgW * chartRatio; 
+                
+                if(imgH > h - 20) { 
+                    imgH = h - 20; 
+                    imgW = imgH / chartRatio; 
+                }
+                
+                // 添加图片到PDF
+                pdf.addImage(imgData, 'PNG', 10, 10, imgW, imgH);
+                
+                // 添加标题
+                pdf.setFontSize(16);
+                pdf.setTextColor(30, 136, 229);
+                pdf.text('班级成绩排名趋势图表', w/2, 10, {align: 'center'});
+                
+                // 添加日期
+                pdf.setFontSize(10);
+                pdf.setTextColor(100, 100, 100);
+                const now = new Date();
+                pdf.text(`生成日期: ${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`, w-20, h-10, {align: 'right'});
+                
+                // 保存PDF
+                pdf.save('班级排名趋势分析.pdf');
+                
+                // 更新状态文本
+                document.getElementById('status-text').textContent = 
+                    "PDF文件已生成并开始下载。";
+                    
+            } catch (err) {
+                showErrorMessage("生成PDF失败: " + (err.message || "未知错误"));
+                console.error("PDF生成错误:", err);
+            }
+        }
+        
+        // 窗口大小变化时调整图表
+        window.addEventListener('resize', () => {
+            if (myChart) {
+                myChart.resize();
+            }
+        });
+    </script>
+    
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

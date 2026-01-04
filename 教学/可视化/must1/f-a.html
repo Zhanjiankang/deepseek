@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加速度与力、质量关系实验分析 - 物含妙理</title>
+    
+    <!-- 引入CSS库 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/regression@2.0.1/dist/regression.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #1565c0;
+            --primary-gradient: linear-gradient(135deg, #1e88e5 0%, #64b5f6 100%);
+            --secondary-color: #37474f;
+            --accent-color: #ff6b6b;
+            --success-color: #2ecc71;
+            --warning-color: #ff9800;
+            --light-blue: #e3f2fd;
+            --lighter-blue: #f5faff;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --text-dark: #263238;
+            --text-gray: #607d8b;
+            --shadow-light: 0 8px 25px rgba(30, 136, 229, 0.08);
+            --shadow-medium: 0 12px 30px rgba(30, 136, 229, 0.12);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5faff 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', 'Segoe UI', 'PingFang SC', sans-serif;
+            padding: 20px;
+            color: var(--text-dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 背景装饰元素 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(30, 136, 229, 0.05) 0%, rgba(30, 136, 229, 0) 70%);
+            z-index: -1;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(100, 181, 246, 0.05) 0%, rgba(100, 181, 246, 0) 70%);
+            z-index: -1;
+        }
+        
+        /* 水印 */
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            opacity: 0.1;
+            font-size: 60px;
+            color: var(--primary-color);
+            z-index: 9999;
+            pointer-events: none;
+            font-weight: bold;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        /* 页面头部 */
+        .header {
+            background: var(--white);
+            color: var(--text-dark);
+            padding: 0;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 25px;
+            border-radius: 16px;
+            position: relative;
+            z-index: 1050;
+            overflow: visible;
+            border: none;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .navbar {
+            padding: 1.2rem 2rem;
+            background: var(--white) !important;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: var(--primary-color) !important;
+            transition: all 0.3s ease;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand:hover {
+            color: var(--primary-dark) !important;
+            transform: translateY(-2px);
+        }
+        
+        .navbar-brand i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .date-display {
+            font-size: 1rem;
+            color: var(--white);
+            margin-bottom: 0;
+            white-space: nowrap;
+            font-weight: 500;
+            background: var(--primary-gradient);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+        }
+        
+        .section-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+        
+        .section-toolbar .btn {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+            border: 1px solid rgba(30, 136, 229, 0.3);
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-toolbar .btn:hover {
+            background: rgba(30, 136, 229, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 136, 229, 0.15);
+            color: var(--primary-color);
+        }
+        
+        /* 主容器 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            text-align: center;
+            font-size: 2.2rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            padding: 15px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .page-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        /* 说明区域 */
+        .instructions-container {
+            background: var(--white);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: var(--shadow-light);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        .instructions-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .instructions-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 1.6rem;
+        }
+        
+        .instructions-title i {
+            margin-right: 15px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .instructions-content {
+            color: var(--text-dark);
+            line-height: 1.7;
+        }
+        
+        .instructions-content ol {
+            padding-left: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .instructions-content li {
+            margin-bottom: 10px;
+        }
+        
+        .formula-container {
+            text-align: center;
+            margin: 25px 0;
+            font-size: 1.2rem;
+            font-style: italic;
+            padding: 20px;
+            background: rgba(30, 136, 229, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        /* 标签页样式 */
+        .tabs-container {
+            margin-bottom: 30px;
+            background: var(--white);
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+        }
+        
+        .tabs-header {
+            display: flex;
+            background: rgba(30, 136, 229, 0.05);
+            border-bottom: 2px solid rgba(30, 136, 229, 0.1);
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 18px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-gray);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .tab-button:hover {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .tab-button.active {
+            background: var(--white);
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 实验内容容器 */
+        .experiment-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        /* 输入区域 */
+        .input-section {
+            flex: 1;
+            min-width: 400px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .input-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(30, 136, 229, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 15px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-description {
+            color: var(--text-gray);
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(30, 136, 229, 0.2);
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            background-color: var(--light-gray);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+            background-color: var(--white);
+        }
+        
+        .textarea-input {
+            min-height: 80px;
+            resize: vertical;
+            font-family: monospace;
+            line-height: 1.5;
+        }
+        
+        .form-hint {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-hint i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        /* 实验组样式 */
+        .experiment-group {
+            background: rgba(30, 136, 229, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .experiment-group:hover {
+            background: rgba(30, 136, 229, 0.08);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .experiment-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+        
+        .experiment-title i {
+            margin-right: 10px;
+        }
+        
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn-action {
+            background: var(--primary-gradient);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.2);
+            font-size: 1.05rem;
+            min-width: 180px;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
+            color: var(--white);
+        }
+        
+        .btn-action-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2);
+        }
+        
+        .btn-action-success:hover {
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+        
+        .btn-action-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+        }
+        
+        .btn-action-warning:hover {
+            box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-action i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        /* 结果区域 */
+        .result-section {
+            flex: 2;
+            min-width: 500px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .result-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary-gradient);
+            opacity: 0.8;
+        }
+        
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        /* 表格样式 */
+        .table-container {
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+        }
+        
+        .data-table th {
+            background: rgba(30, 136, 229, 0.1);
+            color: var(--primary-color);
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(30, 136, 229, 0.2);
+        }
+        
+        .data-table td {
+            border: 1px solid rgba(30, 136, 229, 0.1);
+            padding: 12px 15px;
+            text-align: center;
+            color: var(--text-dark);
+            background-color: var(--white);
+        }
+        
+        .data-table tr:hover td {
+            background-color: rgba(30, 136, 229, 0.05);
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+            flex-grow: 1;
+            background-color: var(--light-gray);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* 拟合按钮组 */
+        .fit-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(30, 136, 229, 0.05);
+            border-radius: 10px;
+        }
+        
+        .fit-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-fit {
+            padding: 8px 16px;
+            border: 2px solid rgba(30, 136, 229, 0.3);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-fit:hover {
+            background: rgba(30, 136, 229, 0.1);
+        }
+        
+        .btn-fit.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+        
+        /* 结论区域 */
+        .conclusion-container {
+            margin-top: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(46, 204, 113, 0.05) 100%);
+            border-left: 4px solid var(--success-color);
+            border-radius: 12px;
+            max-width: 100%;
+        }
+        
+        .conclusion-title {
+            color: var(--success-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 1.4rem;
+        }
+        
+        .conclusion-title i {
+            margin-right: 10px;
+        }
+        
+        .conclusion-content {
+            color: var(--text-dark);
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+        
+        .conclusion-content p {
+            margin-bottom: 12px;
+        }
+        
+        .formula-result {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        
+        /* 状态消息 */
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: rgba(46, 204, 113, 0.1);
+            border-left-color: var(--success-color);
+            color: #2d7a53;
+        }
+        
+        .status-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left-color: #ff9800;
+            color: #e65100;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 页脚 */
+        footer {
+            padding: 1.5rem 0;
+            background: var(--white);
+            color: var(--text-dark);
+            text-align: center;
+            border-radius: 16px;
+            box-shadow: var(--shadow-light);
+            border: none;
+            position: relative;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .experiment-content {
+                flex-direction: column;
+            }
+            
+            .input-section, .result-section {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .tab-button {
+                padding: 15px;
+                font-size: 1rem;
+            }
+            
+            .btn-action {
+                min-width: 160px;
+                padding: 12px 24px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tabs-header {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(30, 136, 229, 0.1);
+            }
+            
+            .tab-button.active {
+                border-bottom: 3px solid var(--primary-color);
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn-action {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .chart-container {
+                height: 350px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .fit-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 水印 -->
+    <div class="watermark">物含妙理</div>
+    
+    <!-- 页面头部 -->
+    <div class="header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="fas fa-rocket me-2"></i>加速度实验分析</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
+                    <!-- 导航菜单已移除 -->
+                </div>
+                <div class="date-display" id="currentDate">----年--月--日 星期-</div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-container">
+        <!-- 返回按钮 -->
+        <div class="section-toolbar">
+            <button class="btn" type="button" onclick="window.history.back();">
+                <i class="fas fa-arrow-left me-2"></i>返回上一层
+            </button>
+        </div>
+        
+        <!-- 页面标题 -->
+        <h1 class="page-title">实验：探究加速度与力、质量的关系</h1>
+        
+        <!-- 说明区域 -->
+        <div class="instructions-container">
+            <h2 class="instructions-title">
+                <i class="fas fa-info-circle"></i> 逐差法
+            </h2>
+            <div class="instructions-content">    
+                <div class="formula-container">
+                    \[ a = \frac{(\Delta x_{4} + \Delta x_{5} + \Delta x_{6}) - (\Delta x_{1} + \Delta x_{2} + \Delta x_{3})}{9T^{2}} \]
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--text-gray);">
+                        注：T为相邻计数点的时间间隔，通常为0.02s（50Hz打点计时器）或0.1s（10Hz打点计时器）
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主标签页 -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" data-tab="force">
+                    <i class="fas fa-bolt"></i> 加速度与力的关系
+                </button>
+                <button class="tab-button" data-tab="mass">
+                    <i class="fas fa-weight-hanging"></i> 加速度与质量的关系
+                </button>
+            </div>
+            
+            <div class="tab-content active" id="force-tab">
+                <div class="experiment-content">
+                    <!-- 输入区域 -->
+                    <div class="input-section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-clipboard-list"></i> 实验参数输入
+                            </h2>
+                        </div>
+                        
+                        <p class="section-description">
+                            质量一定时，探究加速度与力的关系。请设置固定质量并输入各实验组的力和位置数据。
+                        </p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">固定质量 (kg):</label>
+                            <input type="number" id="fixedMass" class="form-control" value="2.0" step="0.1" min="0.1">
+                            <div class="form-hint">
+                                <i class="fas fa-info-circle"></i> 在此实验中，质量保持不变
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">时间间隔 T (s):</label>
+                            <input type="number" id="forceTimeInterval" class="form-control" value="0.02" step="0.01" min="0.01">
+                            <div class="form-hint">
+                                <i class="fas fa-info-circle"></i> 相邻计数点的时间间隔，通常为0.02s（50Hz）或0.1s（10Hz）
+                            </div>
+                        </div>
+                        
+                        <div id="force-experiments">
+                            <!-- 动态生成的实验输入 -->
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="add-force-exp" class="btn-action">
+                                <i class="fas fa-plus-circle"></i> 添加实验组
+                            </button>
+                            <button id="calculate-force" class="btn-action btn-action-success">
+                                <i class="fas fa-calculator"></i> 计算加速度
+                            </button>
+                            <button id="force-generate-sample" class="btn-action">
+                                <i class="fas fa-magic"></i> 生成示例数据
+                            </button>
+                        </div>
+                        
+                        <div id="force-status" class="status-message"></div>
+                    </div>
+                    
+                    <!-- 结果区域 -->
+                    <div class="result-section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-chart-bar"></i> 实验结果
+                            </h2>
+                        </div>
+                        
+                        <div class="result-content">
+                            <div id="force-table" class="table-container"></div>
+                            
+                            <!-- 主图表容器 -->
+                            <div class="chart-container">
+                                <canvas id="forceChart"></canvas>
+                            </div>
+                            
+                            <!-- 拟合按钮组 -->
+                            <div class="fit-options">
+                                <span style="font-weight: 600; color: var(--primary-color);">拟合方式:</span>
+                                <div class="fit-buttons">
+                                    <button class="btn-fit" data-fit="none">无拟合</button>
+                                    <button class="btn-fit active" data-fit="linear">线性拟合</button>
+                                    <button class="btn-fit" data-fit="quadratic">二次拟合</button>
+                                </div>
+                            </div>
+                            
+                            <div id="force-conclusion" class="conclusion-container" style="display: none;">
+                                <h3 class="conclusion-title">
+                                    <i class="fas fa-chart-line"></i> 分析结论
+                                </h3>
+                                <div class="conclusion-content">
+                                    <p id="force-conclusion-content"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="mass-tab">
+                <div class="experiment-content">
+                    <!-- 输入区域 -->
+                    <div class="input-section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-clipboard-list"></i> 实验参数输入
+                            </h2>
+                        </div>
+                        
+                        <p class="section-description">
+                            合外力一定时，探究加速度与质量的关系。请设置固定外力并输入各实验组的质量和位置数据。
+                        </p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">固定外力 (N):</label>
+                            <input type="number" id="fixedForce" class="form-control" value="10.0" step="0.1" min="0.1">
+                            <div class="form-hint">
+                                <i class="fas fa-info-circle"></i> 在此实验中，外力保持不变
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">时间间隔 T (s):</label>
+                            <input type="number" id="massTimeInterval" class="form-control" value="0.02" step="0.01" min="0.01">
+                            <div class="form-hint">
+                                <i class="fas fa-info-circle"></i> 相邻计数点的时间间隔，通常为0.02s（50Hz）或0.1s（10Hz）
+                            </div>
+                        </div>
+                        
+                        <div id="mass-experiments">
+                            <!-- 动态生成的实验输入 -->
+                        </div>
+                        
+                        <div class="button-group">
+                            <button id="add-mass-exp" class="btn-action">
+                                <i class="fas fa-plus-circle"></i> 添加实验组
+                            </button>
+                            <button id="calculate-mass" class="btn-action btn-action-success">
+                                <i class="fas fa-calculator"></i> 计算加速度
+                            </button>
+                            <button id="mass-generate-sample" class="btn-action">
+                                <i class="fas fa-magic"></i> 生成示例数据
+                            </button>
+                        </div>
+                        
+                        <div id="mass-status" class="status-message"></div>
+                    </div>
+                    
+                    <!-- 结果区域 -->
+                    <div class="result-section">
+                        <div class="section-header">
+                            <h2 class="section-title">
+                                <i class="fas fa-chart-bar"></i> 实验结果
+                            </h2>
+                        </div>
+                        
+                        <div class="result-content">
+                            <div id="mass-table" class="table-container"></div>
+                            
+                            <!-- 子标签页 -->
+                            <div class="sub-tabs-header">
+                                <button class="sub-tab-button active" data-mass-tab="a-m">a-m 关系</button>
+                                <button class="sub-tab-button" data-mass-tab="a-invm">a-1/m 关系</button>
+                            </div>
+                            
+                            <div class="tab-content active" data-mass-content="a-m">
+                                <div class="chart-container">
+                                    <canvas id="massChart"></canvas>
+                                </div>
+                                
+                                <!-- 拟合按钮组 -->
+                                <div class="fit-options">
+                                    <span style="font-weight: 600; color: var(--primary-color);">拟合方式:</span>
+                                    <div class="fit-buttons">
+                                        <button class="btn-fit" data-fit="none">无拟合</button>
+                                        <button class="btn-fit" data-fit="linear">线性拟合</button>
+                                        <button class="btn-fit active" data-fit="quadratic">二次拟合</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="tab-content" data-mass-content="a-invm">
+                                <div id="invm-table" class="table-container"></div>
+                                
+                                <div class="chart-container">
+                                    <canvas id="invmChart"></canvas>
+                                </div>
+                                
+                                <!-- 拟合按钮组 -->
+                                <div class="fit-options">
+                                    <span style="font-weight: 600; color: var(--primary-color);">拟合方式:</span>
+                                    <div class="fit-buttons">
+                                        <button class="btn-fit" data-fit="none">无拟合</button>
+                                        <button class="btn-fit active" data-fit="linear">线性拟合</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="mass-conclusion" class="conclusion-container" style="display: none;">
+                                <h3 class="conclusion-title">
+                                    <i class="fas fa-chart-line"></i> 分析结论
+                                </h3>
+                                <div class="conclusion-content">
+                                    <p id="mass-conclusion-content"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer id="about">
+        <div class="container">
+            <p class="mb-0" style="color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-atom me-2"></i>© 2025 物含妙理 | 加速度实验分析系统
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // 全局变量
+        let forceExperiments = [];
+        let massExperiments = [];
+        let forceChart = null;
+        let massChart = null;
+        let invmChart = null;
+        
+        // 更新日期显示
+        function updateDateDisplay() {
+            try {
+                const now = new Date();
+                const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+                const dateDisplay = document.getElementById('currentDate');
+                if (dateDisplay) {
+                    dateDisplay.textContent = 
+                        `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 星期${weekDays[now.getDay()]}`;
+                }
+            } catch (error) {
+                console.error("更新日期显示时出错:", error);
+            }
+        }
+        
+        // 页面加载完成后更新日期
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDateDisplay();
+            initPage();
+        });
+        
+        // 初始化页面
+        function initPage() {
+            // 初始化实验数据
+            initForceExperiments();
+            initMassExperiments();
+            
+            // 初始化标签页
+            initTabs();
+            
+            // 初始化质量关系子标签
+            initMassSubTabs();
+            
+            // 添加事件监听器
+            document.getElementById('add-force-exp').addEventListener('click', addForceExperiment);
+            document.getElementById('add-mass-exp').addEventListener('click', addMassExperiment);
+            document.getElementById('calculate-force').addEventListener('click', calculateForceExperiments);
+            document.getElementById('calculate-mass').addEventListener('click', calculateMassExperiments);
+            
+            // 生成示例数据事件
+            document.getElementById('force-generate-sample').addEventListener('click', generateForceSampleData);
+            document.getElementById('mass-generate-sample').addEventListener('click', generateMassSampleData);
+            
+            // 重新渲染MathJax公式
+            MathJax = {
+                tex: {
+                    inlineMath: [['$', '$'], ['\\(', '\\)']],
+                    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                },
+                svg: {
+                    fontCache: 'global'
+                }
+            };
+            
+            // 初始计算一次
+            setTimeout(() => {
+                calculateForceExperiments();
+                calculateMassExperiments();
+            }, 500);
+        }
+        
+        // 解析逗号分隔的位置数据
+        function parsePositionString(positionStr) {
+            if (!positionStr || positionStr.trim() === '') {
+                return [];
+            }
+            
+            // 支持多种分隔符：逗号、空格、分号、制表符
+            const separators = /[,\s;]+/;
+            const parts = positionStr.trim().split(separators);
+            
+            // 过滤空字符串并转换为数字
+            const positions = parts
+                .filter(part => part.trim() !== '')
+                .map(part => {
+                    // 尝试解析为数字
+                    const num = parseFloat(part);
+                    return isNaN(num) ? 0 : num;
+                });
+            
+            return positions;
+        }
+        
+        // 显示状态消息
+        function showStatusMessage(message, type, tab) {
+            const statusId = tab === 'force' ? 'force-status' : 'mass-status';
+            const statusEl = document.getElementById(statusId);
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = `status-message status-${type}`;
+                statusEl.style.display = 'block';
+                
+                // 5秒后自动隐藏
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        function hideStatusMessage(tab) {
+            const statusId = tab === 'force' ? 'force-status' : 'mass-status';
+            const statusEl = document.getElementById(statusId);
+            if (statusEl) {
+                statusEl.style.display = 'none';
+            }
+        }
+        
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab-button[data-tab]');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // 更新标签状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新内容显示
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                });
+            });
+        }
+        
+        function initMassSubTabs() {
+            const tabs = document.querySelectorAll('.sub-tab-button[data-mass-tab]');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-mass-tab');
+                    
+                    // 更新标签状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新内容显示
+                    document.querySelectorAll('.tab-content[data-mass-content]').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.querySelector(`.tab-content[data-mass-content="${tabName}"]`).classList.add('active');
+                    
+                    // 如果已经计算过数据，更新图表
+                    if (tabName === 'a-m' && massExperiments.length > 0) {
+                        drawMassChart();
+                    } else if (tabName === 'a-invm' && massExperiments.length > 0) {
+                        drawInvmChart();
+                    }
+                });
+            });
+        }
+        
+        function initForceExperiments() {
+            const container = document.getElementById('force-experiments');
+            container.innerHTML = '';
+            forceExperiments = [];
+            
+            // 添加3组初始实验
+            for (let i = 0; i < 3; i++) {
+                addForceExperiment();
+            }
+        }
+        
+        function initMassExperiments() {
+            const container = document.getElementById('mass-experiments');
+            container.innerHTML = '';
+            massExperiments = [];
+            
+            // 添加3组初始实验
+            for (let i = 0; i < 3; i++) {
+                addMassExperiment();
+            }
+        }
+        
+        function addForceExperiment() {
+            const container = document.getElementById('force-experiments');
+            const expId = forceExperiments.length + 1;
+            
+            // 生成默认位置数据
+            const defaultPositions = generateDefaultPositions(expId, false);
+            
+            const expDiv = document.createElement('div');
+            expDiv.className = 'experiment-group';
+            expDiv.innerHTML = `
+                <h3 class="experiment-title">
+                    <i class="fas fa-vial"></i> 实验组 ${expId}
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">力 F (N):</label>
+                    <input type="number" class="force-value form-control" value="${expId * 2}" step="0.1" min="0.1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">7个计数点位置 (米, 逗号分隔):</label>
+                    <textarea class="positions-input form-control textarea-input" placeholder="例如: 0.1, 0.2, 0.32, 0.45, 0.6, 0.78, 0.95" rows="2">${defaultPositions.map(p => p.toFixed(3)).join(', ')}</textarea>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i> 请输入7个计数点的位置数据，用逗号、空格或分号分隔
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(expDiv);
+            
+            forceExperiments.push({
+                force: expId * 2,
+                positions: defaultPositions,
+                acceleration: null
+            });
+        }
+        
+        function addMassExperiment() {
+            const container = document.getElementById('mass-experiments');
+            const expId = massExperiments.length + 1;
+            
+            // 生成默认位置数据
+            const defaultPositions = generateDefaultPositions(expId, true);
+            
+            const expDiv = document.createElement('div');
+            expDiv.className = 'experiment-group';
+            expDiv.innerHTML = `
+                <h3 class="experiment-title">
+                    <i class="fas fa-vial"></i> 实验组 ${expId}
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">质量 m (kg):</label>
+                    <input type="number" class="mass-value form-control" value="${1 + expId * 0.5}" step="0.1" min="0.1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">7个计数点位置 (米, 逗号分隔):</label>
+                    <textarea class="positions-input form-control textarea-input" placeholder="例如: 0.05, 0.12, 0.21, 0.32, 0.45, 0.6, 0.77" rows="2">${defaultPositions.map(p => p.toFixed(3)).join(', ')}</textarea>
+                    <div class="form-hint">
+                        <i class="fas fa-info-circle"></i> 请输入7个计数点的位置数据，用逗号、空格或分号分隔
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(expDiv);
+            
+            massExperiments.push({
+                mass: 1 + expId * 0.5,
+                invMass: 1 / (1 + expId * 0.5),
+                positions: defaultPositions,
+                acceleration: null
+            });
+        }
+        
+        function generateDefaultPositions(expId, isMassExperiment = false) {
+            // 生成默认位置数据
+            const base = isMassExperiment ? 0.05 * expId : 0.1 * expId;
+            let positions = [];
+            
+            for (let i = 0; i < 7; i++) {
+                positions.push(base * i + 0.01 * i * i);
+            }
+            
+            return positions;
+        }
+        
+        function generateForceSampleData() {
+            const expInputs = document.querySelectorAll('#force-experiments .experiment-group');
+            
+            expInputs.forEach((exp, index) => {
+                const force = (index + 1) * 2;
+                const forceInput = exp.querySelector('.force-value');
+                forceInput.value = force;
+                
+                // 生成示例位置数据（模拟匀加速运动）
+                const timeInterval = parseFloat(document.getElementById('forceTimeInterval').value) || 0.02;
+                const acceleration = force / (parseFloat(document.getElementById('fixedMass').value) || 2.0);
+                
+                let positions = [];
+                for (let i = 0; i < 7; i++) {
+                    const t = i * timeInterval;
+                    // 匀加速运动公式：s = 1/2 * a * t^2
+                    const s = 0.5 * acceleration * t * t;
+                    positions.push(s);
+                }
+                
+                // 添加一些随机性使数据更真实
+                positions = positions.map(p => {
+                    // 添加±5%的随机误差
+                    const error = 1 + (Math.random() * 0.1 - 0.05);
+                    return p * error;
+                });
+                
+                const textarea = exp.querySelector('.positions-input');
+                textarea.value = positions.map(p => p.toFixed(3)).join(', ');
+            });
+            
+            showStatusMessage("已生成示例数据", "success", "force");
+        }
+        
+        function generateMassSampleData() {
+            const expInputs = document.querySelectorAll('#mass-experiments .experiment-group');
+            
+            expInputs.forEach((exp, index) => {
+                const mass = 1 + (index + 1) * 0.5;
+                const massInput = exp.querySelector('.mass-value');
+                massInput.value = mass;
+                
+                // 生成示例位置数据（模拟匀加速运动）
+                const timeInterval = parseFloat(document.getElementById('massTimeInterval').value) || 0.02;
+                const force = parseFloat(document.getElementById('fixedForce').value) || 10.0;
+                const acceleration = force / mass;
+                
+                let positions = [];
+                for (let i = 0; i < 7; i++) {
+                    const t = i * timeInterval;
+                    // 匀加速运动公式：s = 1/2 * a * t^2
+                    const s = 0.5 * acceleration * t * t;
+                    positions.push(s);
+                }
+                
+                // 添加一些随机性使数据更真实
+                positions = positions.map(p => {
+                    // 添加±5%的随机误差
+                    const error = 1 + (Math.random() * 0.1 - 0.05);
+                    return p * error;
+                });
+                
+                const textarea = exp.querySelector('.positions-input');
+                textarea.value = positions.map(p => p.toFixed(3)).join(', ');
+            });
+            
+            showStatusMessage("已生成示例数据", "success", "mass");
+        }
+        
+        function calculateForceExperiments() {
+            hideStatusMessage('force');
+            
+            const fixedMass = parseFloat(document.getElementById('fixedMass').value);
+            if (isNaN(fixedMass) || fixedMass <= 0) {
+                showStatusMessage("请输入有效的质量值（正数）", "warning", "force");
+                return;
+            }
+            
+            const timeInterval = parseFloat(document.getElementById('forceTimeInterval').value);
+            if (isNaN(timeInterval) || timeInterval <= 0) {
+                showStatusMessage("请输入有效的时间间隔（正数）", "warning", "force");
+                return;
+            }
+            
+            // 获取所有实验数据
+            const expInputs = document.querySelectorAll('#force-experiments .experiment-group');
+            forceExperiments = [];
+            
+            for (let i = 0; i < expInputs.length; i++) {
+                const forceInput = expInputs[i].querySelector('.force-value');
+                const positionsInput = expInputs[i].querySelector('.positions-input');
+                
+                const force = parseFloat(forceInput.value);
+                
+                if (isNaN(force) || force <= 0) {
+                    showStatusMessage(`实验组 ${i+1} 的力值无效`, "warning", "force");
+                    return;
+                }
+                
+                // 解析位置数据
+                const positions = parsePositionString(positionsInput.value);
+                
+                if (positions.length < 7) {
+                    showStatusMessage(`实验组 ${i+1} 的位置数据不足7个，请检查输入格式`, "warning", "force");
+                    return;
+                }
+                
+                // 只取前7个数据点
+                const validPositions = positions.slice(0, 7);
+                
+                // 计算加速度
+                const acceleration = calculateAcceleration(validPositions, timeInterval);
+                
+                forceExperiments.push({
+                    force: force,
+                    positions: validPositions,
+                    acceleration: acceleration
+                });
+            }
+            
+            if (forceExperiments.length === 0) {
+                showStatusMessage("没有可用的实验数据", "warning", "force");
+                return;
+            }
+            
+            // 显示结果
+            displayForceResults();
+            drawForceChart();
+            
+            // 初始化拟合按钮
+            initFitButtons('force');
+            
+            showStatusMessage("加速度计算完成！", "success", "force");
+        }
+        
+        function calculateMassExperiments() {
+            hideStatusMessage('mass');
+            
+            const fixedForce = parseFloat(document.getElementById('fixedForce').value);
+            if (isNaN(fixedForce) || fixedForce <= 0) {
+                showStatusMessage("请输入有效的力值（正数）", "warning", "mass");
+                return;
+            }
+            
+            const timeInterval = parseFloat(document.getElementById('massTimeInterval').value);
+            if (isNaN(timeInterval) || timeInterval <= 0) {
+                showStatusMessage("请输入有效的时间间隔（正数）", "warning", "mass");
+                return;
+            }
+            
+            // 获取所有实验数据
+            const expInputs = document.querySelectorAll('#mass-experiments .experiment-group');
+            massExperiments = [];
+            
+            for (let i = 0; i < expInputs.length; i++) {
+                const massInput = expInputs[i].querySelector('.mass-value');
+                const positionsInput = expInputs[i].querySelector('.positions-input');
+                
+                const mass = parseFloat(massInput.value);
+                
+                if (isNaN(mass) || mass <= 0) {
+                    showStatusMessage(`实验组 ${i+1} 的质量值无效`, "warning", "mass");
+                    return;
+                }
+                
+                // 解析位置数据
+                const positions = parsePositionString(positionsInput.value);
+                
+                if (positions.length < 7) {
+                    showStatusMessage(`实验组 ${i+1} 的位置数据不足7个，请检查输入格式`, "warning", "mass");
+                    return;
+                }
+                
+                // 只取前7个数据点
+                const validPositions = positions.slice(0, 7);
+                
+                // 计算加速度
+                const acceleration = calculateAcceleration(validPositions, timeInterval);
+                
+                massExperiments.push({
+                    mass: mass,
+                    invMass: 1 / mass,
+                    positions: validPositions,
+                    acceleration: acceleration
+                });
+            }
+            
+            if (massExperiments.length === 0) {
+                showStatusMessage("没有可用的实验数据", "warning", "mass");
+                return;
+            }
+            
+            // 显示结果
+            displayMassResults();
+            drawMassChart();
+            drawInvmChart();
+            
+            // 初始化拟合按钮
+            initFitButtons('mass');
+            
+            showStatusMessage("加速度计算完成！", "success", "mass");
+        }
+        
+        function calculateAcceleration(positions, timeInterval) {
+            // 使用逐差法计算加速度
+            const deltas = [];
+            for (let i = 1; i < positions.length; i++) {
+                deltas.push(positions[i] - positions[i-1]);
+            }
+            
+            // 使用逐差法公式
+            const sumFront = deltas[0] + deltas[1] + deltas[2];
+            const sumBack = deltas[3] + deltas[4] + deltas[5];
+            const deltaS = sumBack - sumFront;
+            const acceleration = deltaS / (9 * timeInterval * timeInterval);
+            
+            return acceleration;
+        }
+        
+        function displayForceResults() {
+            const fixedMass = parseFloat(document.getElementById('fixedMass').value);
+            const timeInterval = parseFloat(document.getElementById('forceTimeInterval').value);
+            
+            let tableHTML = `
+                <h3>实验数据汇总表（质量一定: ${fixedMass.toFixed(2)}kg，时间间隔: ${timeInterval.toFixed(3)}s）</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>实验组</th>
+                        <th>力 F (N)</th>
+                        <th>加速度 a (m/s²)</th>
+                        <th>理论加速度 (m/s²)</th>
+                        <th>相对误差 (%)</th>
+                    </tr>
+            `;
+            
+            forceExperiments.forEach((exp, index) => {
+                const theoreticalAcceleration = exp.force / fixedMass;
+                const relativeError = Math.abs((exp.acceleration - theoreticalAcceleration) / theoreticalAcceleration * 100);
+                
+                tableHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${exp.force.toFixed(2)}</td>
+                        <td>${exp.acceleration.toFixed(3)}</td>
+                        <td>${theoreticalAcceleration.toFixed(3)}</td>
+                        <td>${relativeError.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `</table>`;
+            document.getElementById('force-table').innerHTML = tableHTML;
+        }
+        
+        function displayMassResults() {
+            const fixedForce = parseFloat(document.getElementById('fixedForce').value);
+            const timeInterval = parseFloat(document.getElementById('massTimeInterval').value);
+            
+            let tableHTML = `
+                <h3>实验数据汇总表（合外力一定: ${fixedForce.toFixed(2)}N，时间间隔: ${timeInterval.toFixed(3)}s）</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>实验组</th>
+                        <th>质量 m (kg)</th>
+                        <th>加速度 a (m/s²)</th>
+                        <th>理论加速度 (m/s²)</th>
+                        <th>相对误差 (%)</th>
+                    </tr>
+            `;
+            
+            massExperiments.forEach((exp, index) => {
+                const theoreticalAcceleration = fixedForce / exp.mass;
+                const relativeError = Math.abs((exp.acceleration - theoreticalAcceleration) / theoreticalAcceleration * 100);
+                
+                tableHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${exp.mass.toFixed(3)}</td>
+                        <td>${exp.acceleration.toFixed(3)}</td>
+                        <td>${theoreticalAcceleration.toFixed(3)}</td>
+                        <td>${relativeError.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `</table>`;
+            document.getElementById('mass-table').innerHTML = tableHTML;
+            
+            // 显示倒数表
+            let invmHTML = `
+                <h3>加速度与质量倒数关系表</h3>
+                <table class="data-table">
+                    <tr>
+                        <th>实验组</th>
+                        <th>质量 m (kg)</th>
+                        <th>1/m (kg⁻¹)</th>
+                        <th>加速度 a (m/s²)</th>
+                        <th>斜率 F (N)</th>
+                    </tr>
+            `;
+            
+            massExperiments.forEach((exp, index) => {
+                const slope = exp.acceleration / exp.invMass;
+                
+                invmHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${exp.mass.toFixed(3)}</td>
+                        <td>${exp.invMass.toFixed(3)}</td>
+                        <td>${exp.acceleration.toFixed(3)}</td>
+                        <td>${slope.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            
+            invmHTML += `</table>`;
+            document.getElementById('invm-table').innerHTML = invmHTML;
+        }
+        
+        function initFitButtons(type) {
+            let container;
+            if (type === 'force') {
+                container = document.querySelector('#force-tab .fit-buttons');
+            } else {
+                const activeTab = document.querySelector('.sub-tab-button.active').getAttribute('data-mass-tab');
+                container = document.querySelector(`[data-mass-content="${activeTab}"] .fit-buttons`);
+            }
+            
+            if (!container) return;
+            
+            const buttons = container.querySelectorAll('.btn-fit');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 更新按钮状态
+                    buttons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // 更新图表
+                    if (type === 'force') {
+                        drawForceChart();
+                    } else {
+                        const massTab = document.querySelector('.sub-tab-button.active').getAttribute('data-mass-tab');
+                        if (massTab === 'a-m') {
+                            drawMassChart();
+                        } else {
+                            drawInvmChart();
+                        }
+                    }
+                });
+            });
+        }
+        
+        function drawForceChart() {
+            const ctx = document.getElementById('forceChart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (forceChart) {
+                forceChart.destroy();
+            }
+            
+            const fitType = document.querySelector('#force-tab .btn-fit.active').getAttribute('data-fit');
+            
+            // 绘制加速度-力关系图
+            const forces = forceExperiments.map(exp => exp.force);
+            const accelerations = forceExperiments.map(exp => exp.acceleration);
+            
+            const datasets = [{
+                label: '实验数据',
+                data: forces.map((f, i) => ({x: f, y: accelerations[i]})),
+                backgroundColor: 'rgba(30, 136, 229, 0.8)',
+                borderColor: 'rgba(30, 136, 229, 1)',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointBorderWidth: 2,
+                pointBorderColor: 'rgba(255, 255, 255, 0.8)'
+            }];
+            
+            // 添加拟合线
+            if (fitType !== 'none') {
+                const fitData = addFitLine(forces, accelerations, fitType);
+                if (fitData) {
+                    datasets.push(fitData);
+                }
+            }
+            
+            forceChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: getChartOptions('力 F (N)', '加速度 a (m/s²)', '加速度与力的关系')
+            });
+            
+            // 更新结论
+            updateForceConclusion(fitType);
+        }
+        
+        function drawMassChart() {
+            const ctx = document.getElementById('massChart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (massChart) {
+                massChart.destroy();
+            }
+            
+            const fitType = document.querySelector('[data-mass-content="a-m"] .btn-fit.active').getAttribute('data-fit');
+            
+            // 绘制加速度-质量关系图
+            const masses = massExperiments.map(exp => exp.mass);
+            const accelerations = massExperiments.map(exp => exp.acceleration);
+            
+            const datasets = [{
+                label: '实验数据',
+                data: masses.map((m, i) => ({x: m, y: accelerations[i]})),
+                backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                borderColor: 'rgba(76, 175, 80, 1)',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointBorderWidth: 2,
+                pointBorderColor: 'rgba(255, 255, 255, 0.8)'
+            }];
+            
+            // 添加拟合线
+            if (fitType !== 'none') {
+                const fitData = addFitLine(masses, accelerations, fitType);
+                if (fitData) {
+                    datasets.push(fitData);
+                }
+            }
+            
+            massChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: getChartOptions('质量 m (kg)', '加速度 a (m/s²)', '加速度与质量的关系')
+            });
+        }
+        
+        function drawInvmChart() {
+            const ctx = document.getElementById('invmChart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (invmChart) {
+                invmChart.destroy();
+            }
+            
+            const fitType = document.querySelector('[data-mass-content="a-invm"] .btn-fit.active').getAttribute('data-fit');
+            
+            // 绘制加速度-质量倒数关系图
+            const invMasses = massExperiments.map(exp => exp.invMass);
+            const accelerations = massExperiments.map(exp => exp.acceleration);
+            
+            const datasets = [{
+                label: '实验数据',
+                data: invMasses.map((invM, i) => ({x: invM, y: accelerations[i]})),
+                backgroundColor: 'rgba(255, 152, 0, 0.8)',
+                borderColor: 'rgba(255, 152, 0, 1)',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                pointBorderWidth: 2,
+                pointBorderColor: 'rgba(255, 255, 255, 0.8)'
+            }];
+            
+            // 添加拟合线
+            if (fitType !== 'none') {
+                const fitData = addFitLine(invMasses, accelerations, fitType);
+                if (fitData) {
+                    datasets.push(fitData);
+                }
+            }
+            
+            invmChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: getChartOptions('1/m (kg⁻¹)', '加速度 a (m/s²)', '加速度与质量倒数的关系')
+            });
+            
+            // 更新结论
+            updateMassConclusion(fitType);
+        }
+        
+        function addFitLine(xData, yData, fitType) {
+            if (xData.length < 2) return null;
+            
+            const data = xData.map((x, i) => [x, yData[i]]);
+            let result, equation, fitPoints;
+            
+            if (fitType === 'linear') {
+                result = regression.linear(data);
+                equation = result.equation;
+                
+                const xMin = Math.min(...xData);
+                const xMax = Math.max(...xData);
+                const step = (xMax - xMin) / 100;
+                
+                fitPoints = [];
+                for (let x = xMin; x <= xMax; x += step) {
+                    fitPoints.push({x: x, y: equation[0] * x + equation[1]});
+                }
+                
+                return {
+                    label: `线性拟合: y = ${equation[0].toFixed(4)}x + ${equation[1].toFixed(4)}`,
+                    data: fitPoints,
+                    backgroundColor: 'rgba(255, 99, 132, 0)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    pointRadius: 0,
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    fill: false,
+                    showLine: true,
+                    type: 'line'
+                };
+                
+            } else if (fitType === 'quadratic') {
+                result = regression.polynomial(data, {order: 2});
+                equation = result.equation;
+                
+                const xMin = Math.min(...xData);
+                const xMax = Math.max(...xData);
+                const step = (xMax - xMin) / 100;
+                
+                fitPoints = [];
+                for (let x = xMin; x <= xMax; x += step) {
+                    fitPoints.push({x: x, y: equation[0] + equation[1] * x + equation[2] * x * x});
+                }
+                
+                return {
+                    label: `二次拟合: y = ${equation[2].toFixed(4)}x² + ${equation[1].toFixed(4)}x + ${equation[0].toFixed(4)}`,
+                    data: fitPoints,
+                    backgroundColor: 'rgba(156, 39, 176, 0)',
+                    borderColor: 'rgba(156, 39, 176, 1)',
+                    pointRadius: 0,
+                    borderWidth: 3,
+                    borderDash: [3, 3],
+                    fill: false,
+                    showLine: true,
+                    type: 'line'
+                };
+            }
+            
+            return null;
+        }
+        
+        function getChartOptions(xLabel, yLabel, title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: xLabel,
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            color: '#263238'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#607d8b'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: yLabel,
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            color: '#263238'
+                        },
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#607d8b'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: title,
+                        font: {
+                            size: 18,
+                            weight: 'bold'
+                        },
+                        color: '#1e88e5',
+                        padding: {
+                            top: 10,
+                            bottom: 30
+                        }
+                    },
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 12
+                            },
+                            color: '#263238'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1e88e5',
+                        bodyColor: '#263238',
+                        borderColor: '#1e88e5',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return `${xLabel.split(' ')[0]}: ${context.parsed.x.toFixed(3)}, ${yLabel}: ${context.parsed.y.toFixed(3)}`;
+                            }
+                        }
+                    }
+                }
+            };
+        }
+        
+        function updateForceConclusion(fitType) {
+            const fixedMass = parseFloat(document.getElementById('fixedMass').value);
+            const forces = forceExperiments.map(exp => exp.force);
+            const accelerations = forceExperiments.map(exp => exp.acceleration);
+            
+            document.getElementById('force-conclusion').style.display = 'block';
+            
+            if (fitType === 'linear' && forces.length >= 2) {
+                const data = forces.map((f, i) => [f, accelerations[i]]);
+                const result = regression.linear(data);
+                const slope = result.equation[0];
+                const intercept = result.equation[1];
+                const r2 = result.r2;
+                
+                document.getElementById('force-conclusion-content').innerHTML = `
+                    <p><strong>线性拟合结果:</strong></p>
+                    <p>拟合方程: a = ${slope.toFixed(4)}F + ${intercept.toFixed(4)}</p>
+                    <p>拟合质量: ${(1/slope).toFixed(4)}kg (理论值: ${fixedMass.toFixed(2)}kg)</p>
+                    <p>拟合优度 R² = ${r2.toFixed(4)}</p>
+                    <p>结论: 在质量一定(${fixedMass.toFixed(2)}kg)的情况下，加速度与作用力基本成正比关系。</p>
+                `;
+            } else if (fitType === 'quadratic' && forces.length >= 3) {
+                const data = forces.map((f, i) => [f, accelerations[i]]);
+                const result = regression.polynomial(data, {order: 2});
+                const a = result.equation[2];
+                const b = result.equation[1];
+                const c = result.equation[0];
+                
+                document.getElementById('force-conclusion-content').innerHTML = `
+                    <p><strong>二次拟合结果:</strong></p>
+                    <p>拟合方程: a = ${a.toFixed(4)}F² + ${b.toFixed(4)}F + ${c.toFixed(4)}</p>
+                    <p>结论: 在质量一定(${fixedMass.toFixed(2)}kg)的情况下，加速度与作用力存在非线性关系，可能受实验误差或系统误差影响。</p>
+                `;
+            } else {
+                document.getElementById('force-conclusion-content').innerHTML = `
+                    <p>在质量一定(${fixedMass.toFixed(2)}kg)的情况下，加速度与作用力成正比关系。</p>
+                    <p><strong>合外力一定时，加速度与作用力成正比!</strong></p>
+                `;
+            }
+        }
+        
+        function updateMassConclusion(fitType) {
+            const fixedForce = parseFloat(document.getElementById('fixedForce').value);
+            const invMasses = massExperiments.map(exp => exp.invMass);
+            const accelerations = massExperiments.map(exp => exp.acceleration);
+            
+            document.getElementById('mass-conclusion').style.display = 'block';
+            
+            if (fitType === 'linear' && invMasses.length >= 2) {
+                const data = invMasses.map((invM, i) => [invM, accelerations[i]]);
+                const result = regression.linear(data);
+                const slope = result.equation[0];
+                const intercept = result.equation[1];
+                const r2 = result.r2;
+                
+                document.getElementById('mass-conclusion-content').innerHTML = `
+                    <p><strong>线性拟合结果:</strong></p>
+                    <p>拟合方程: a = ${slope.toFixed(4)}(1/m) + ${intercept.toFixed(4)}</p>
+                    <p>拟合力值: ${slope.toFixed(4)}N (理论值: ${fixedForce.toFixed(2)}N)</p>
+                    <p>拟合优度 R² = ${r2.toFixed(4)}</p>
+                    <p>结论: 在合外力一定(${fixedForce.toFixed(2)}N)的情况下，加速度与质量基本成反比关系。</p>
+                `;
+            } else {
+                document.getElementById('mass-conclusion-content').innerHTML = `
+                    <p>在合外力一定(${fixedForce.toFixed(2)}N)的情况下，加速度与质量成反比关系。</p>
+                    <p><strong>质量一定时，加速度与质量成反比!</strong></p>
+                `;
+            }
+        }
+    </script>
+    
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
