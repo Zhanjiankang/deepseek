@@ -33,28 +33,96 @@
             cursor: pointer;
             margin-left: 10px;
         }
-        button:hover {
-            background-color: #45a049;
+        /* 输入区域 */
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
         }
-        #voiceInputBtn {
-            background-color: #2196F3;
+        
+        #inputMsg {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
         }
-        #voiceInputBtn:hover {
-            background-color: #0b7dda;
+        
+        #inputMsg:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
         }
-        #voiceOutputBtn {
-            background-color: #ff9800;
+        
+        /* 按钮样式 */
+        .voice-input-btn, 
+        .send-btn,
+        .voice-output-btn,
+        .stop-voice-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
         }
-        #voiceOutputBtn:hover {
-            background-color: #e68900;
+        
+        .voice-input-btn {
+            background: #f8f9fa;
+            color: #4CAF50;
         }
-        #stopVoiceBtn {
-            background-color: #f44336;
+        
+        .voice-input-btn:hover {
+            background: #4CAF50;
+            color: white;
         }
-        #stopVoiceBtn:hover {
-            background-color: #da190b;
+        
+        .voice-input-btn.listening {
+            background: #e74c3c;
+            color: white;
+            animation: pulse 1s infinite;
         }
-        #response {
+        
+        .send-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .voice-output-btn {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .voice-output-btn:hover:not(:disabled) {
+            background: #0b7dda;
+        }
+        
+        .stop-voice-btn {
+            background: #f44336;
+            color: white;
+        }
+        
+        .stop-voice-btn:hover:not(:disabled) {
+            background: #da190b;
+        }
+        
+        /* 响应区域 */
+        .response-area {
             margin-top: 20px;
             padding: 15px;
             border: 1px solid #ddd;
@@ -63,19 +131,46 @@
             min-height: 100px;
             white-space: pre-wrap;
         }
+        
+        /* 状态指示器 */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+        }
+        
+        .status-indicator.recording .status-dot {
+            background-color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+        
+        .status-indicator.speaking .status-dot {
+            background-color: #2196F3;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* 信息框 */
         .info {
             background-color: #e7f3fe;
             border-left: 6px solid #2196F3;
             padding: 10px;
             margin: 20px 0;
-        }
-        .recording {
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
         }
     </style>
 </head>
@@ -87,93 +182,57 @@
         <p>输入你的问题，点击发送，即可获得 DeepSeek 的回复。</p>
     </div>
     
-    <input type="text" id="inputMsg" placeholder="输入你的问题（例如：你好，介绍一下你自己）">
-    <button onclick="askDeepSeek()">发送</button>
-    <button id="voiceInputBtn" onclick="toggleVoiceInput()">🎤 语音输入</button>
-    
-    <div id="recordingStatus" style="margin-top: 10px; color: #666; font-size: 14px; display: none;">
-        <span id="recordingIndicator" style="color: red; font-weight: bold;">●</span> 正在录音...
+    <div class="input-area">
+        <button class="voice-input-btn" id="voiceInputBtn" title="语音输入" onclick="toggleVoiceInput()">
+            <i class="fas fa-microphone"></i>
+        </button>
+        
+        <input 
+            type="text" 
+            id="inputMsg" 
+            placeholder="输入您的问题或点击麦克风进行语音输入..."
+            autocomplete="off"
+        >
+        
+        <button class="send-btn" id="sendBtn" onclick="askDeepSeek()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
     </div>
     
-    <div id="response" style="margin-top: 20px; white-space: pre-wrap;"></div>
+    <div id="response" class="response-area"></div>
     
-    <div style="margin-top: 10px;">
-        <button id="voiceOutputBtn" onclick="speakResponse()" disabled>🔊 语音播放</button>
-        <button id="stopVoiceBtn" onclick="stopSpeaking()" disabled style="margin-left: 10px;">⏹️ 停止</button>
+    <div class="voice-controls">
+        <button class="voice-output-btn" id="voiceOutputBtn" title="播放语音" onclick="speakResponse()" disabled>
+            <i class="fas fa-play"></i>
+        </button>
+        <button class="stop-voice-btn" id="stopVoiceBtn" title="停止播放" onclick="stopSpeaking()" disabled>
+            <i class="fas fa-stop"></i>
+        </button>
+    </div>
+    
+    <div id="statusIndicator" class="status-indicator">
+        <div class="status-dot"></div>
+        <span class="status-text">待命...</span>
     </div>
 
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script>
         // 语音识别和语音合成变量
         let recognition = null;
         let isRecording = false;
         let synthesis = window.speechSynthesis;
         let currentUtterance = null;
+        let isVoiceEnabled = true;
         
-        async function askDeepSeek() {
-            const msg = document.getElementById('inputMsg').value;
-            const output = document.getElementById('response');
-            
-            if (!msg.trim()) {
-                output.innerText = "请输入问题";
-                return;
-            }
-            
-            output.innerText = "思考中...";
-            
-            // 禁用语音输出按钮
-            document.getElementById('voiceOutputBtn').disabled = true;
-            document.getElementById('stopVoiceBtn').disabled = true;
-            
-            try {
-                // 调用我们刚才写的 Netlify Function
-                // 路径规则是 /.netlify/functions/[文件名]
-                const res = await fetch('/.netlify/functions/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: msg })
-                });
-
-                const data = await res.json();
-                
-                if (data.choices && data.choices.length > 0) {
-                    const responseText = data.choices[0].message.content;
-                    output.innerText = responseText;
-                    
-                    // 启用语音输出按钮
-                    document.getElementById('voiceOutputBtn').disabled = false;
-                    
-                    // 保存响应文本供语音合成使用
-                    output.dataset.responseText = responseText;
-                } else if (data.error) {
-                    output.innerText = "错误: " + data.error;
-                } else {
-                    output.innerText = "未知响应: " + JSON.stringify(data, null, 2);
-                }
-            } catch (err) {
-                output.innerText = "请求失败: " + err.message;
-            }
-        }
-        
-        // 语音输入功能
-        function toggleVoiceInput() {
-            if (!recognition) {
-                initializeSpeechRecognition();
-            }
-            
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
-            }
-        }
-        
-        function initializeSpeechRecognition() {
+        // 初始化语音识别
+        function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             
             if (!SpeechRecognition) {
-                alert("您的浏览器不支持语音识别功能，请使用 Chrome 或 Edge 浏览器");
+                document.getElementById('voiceInputBtn').disabled = true;
+                document.getElementById('voiceInputBtn').title = "您的浏览器不支持语音识别功能";
                 return;
             }
             
@@ -184,7 +243,8 @@
             
             recognition.onstart = function() {
                 isRecording = true;
-                updateRecordingUI(true);
+                document.getElementById('voiceInputBtn').classList.add('listening');
+                updateStatus('recording', '正在聆听...');
             };
             
             recognition.onresult = function(event) {
@@ -194,7 +254,7 @@
                 // 自动发送请求
                 setTimeout(() => {
                     askDeepSeek();
-                }, 500);
+                }, 300);
             };
             
             recognition.onerror = function(event) {
@@ -209,6 +269,19 @@
             recognition.onend = function() {
                 stopRecording();
             };
+        }
+        
+        // 开始/停止录音
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+            
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
         }
         
         function startRecording() {
@@ -229,25 +302,8 @@
                     console.error("停止录音失败:", error);
                 }
                 isRecording = false;
-                updateRecordingUI(false);
-            }
-        }
-        
-        function updateRecordingUI(recording) {
-            const statusDiv = document.getElementById('recordingStatus');
-            const indicator = document.getElementById('recordingIndicator');
-            const voiceBtn = document.getElementById('voiceInputBtn');
-            
-            if (recording) {
-                statusDiv.style.display = 'block';
-                indicator.classList.add('recording');
-                voiceBtn.textContent = '⏹️ 停止录音';
-                voiceBtn.style.backgroundColor = '#f44336';
-            } else {
-                statusDiv.style.display = 'none';
-                indicator.classList.remove('recording');
-                voiceBtn.textContent = '🎤 语音输入';
-                voiceBtn.style.backgroundColor = '#2196F3';
+                document.getElementById('voiceInputBtn').classList.remove('listening');
+                updateStatus('idle', '待命...');
             }
         }
         
@@ -261,10 +317,7 @@
                 return;
             }
             
-            // 停止当前正在播放的语音
-            if (synthesis.speaking) {
-                synthesis.cancel();
-            }
+            stopSpeaking();
             
             currentUtterance = new SpeechSynthesisUtterance(responseText);
             currentUtterance.lang = 'zh-CN';
@@ -275,17 +328,20 @@
             currentUtterance.onstart = function() {
                 document.getElementById('voiceOutputBtn').disabled = true;
                 document.getElementById('stopVoiceBtn').disabled = false;
+                updateStatus('speaking', '正在说话...');
             };
             
             currentUtterance.onend = function() {
                 document.getElementById('voiceOutputBtn').disabled = false;
                 document.getElementById('stopVoiceBtn').disabled = true;
+                updateStatus('idle', '待命...');
             };
             
             currentUtterance.onerror = function(event) {
                 console.error("语音合成错误:", event);
                 document.getElementById('voiceOutputBtn').disabled = false;
                 document.getElementById('stopVoiceBtn').disabled = true;
+                updateStatus('idle', '待命...');
                 alert("语音播放失败，请重试");
             };
             
@@ -295,31 +351,100 @@
         function stopSpeaking() {
             if (synthesis.speaking) {
                 synthesis.cancel();
-                document.getElementById('voiceOutputBtn').disabled = false;
-                document.getElementById('stopVoiceBtn').disabled = true;
+            }
+            document.getElementById('voiceOutputBtn').disabled = false;
+            document.getElementById('stopVoiceBtn').disabled = true;
+            updateStatus('idle', '待命...');
+        }
+        
+        // 更新状态显示
+        function updateStatus(state, text) {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusDot = statusIndicator.querySelector('.status-dot');
+            const statusText = statusIndicator.querySelector('.status-text');
+            
+            statusIndicator.className = 'status-indicator';
+            statusText.textContent = text;
+            
+            if (state === 'recording') {
+                statusIndicator.classList.add('recording');
+            } else if (state === 'speaking') {
+                statusIndicator.classList.add('speaking');
             }
         }
         
-        // 按回车键发送
+        // 主功能函数
+        async function askDeepSeek() {
+            const msg = document.getElementById('inputMsg').value.trim();
+            const output = document.getElementById('response');
+            
+            if (!msg) {
+                output.innerText = "请输入问题";
+                return;
+            }
+            
+            output.innerText = "思考中...";
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('voiceOutputBtn').disabled = true;
+            document.getElementById('stopVoiceBtn').disabled = true;
+            updateStatus('thinking', '思考中...');
+            
+            try {
+                const res = await fetch('/.netlify/functions/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: msg })
+                });
+
+                const data = await res.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    const responseText = data.choices[0].message.content;
+                    output.innerText = responseText;
+                    output.dataset.responseText = responseText;
+                    
+                    document.getElementById('voiceOutputBtn').disabled = false;
+                    
+                    if (isVoiceEnabled) {
+                        setTimeout(() => {
+                            speakResponse();
+                        }, 300);
+                    }
+                } else if (data.error) {
+                    output.innerText = "错误: " + data.error;
+                } else {
+                    output.innerText = "未知响应: " + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                output.innerText = "请求失败: " + err.message;
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+                updateStatus('idle', '待命...');
+            }
+        }
+        
+        // 事件监听
         document.getElementById('inputMsg').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 askDeepSeek();
             }
         });
         
-        // 页面加载时检查语音合成支持
+        // 按钮事件绑定
+        document.getElementById('voiceInputBtn').addEventListener('click', toggleVoiceInput);
+        document.getElementById('voiceOutputBtn').addEventListener('click', speakResponse);
+        document.getElementById('stopVoiceBtn').addEventListener('click', stopSpeaking);
+        
+        // 页面加载时初始化
         window.addEventListener('load', function() {
             if (!window.speechSynthesis) {
                 document.getElementById('voiceOutputBtn').disabled = true;
                 document.getElementById('voiceOutputBtn').title = "您的浏览器不支持语音合成功能";
             }
             
-            // 检查语音识别支持
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                document.getElementById('voiceInputBtn').disabled = true;
-                document.getElementById('voiceInputBtn').title = "您的浏览器不支持语音识别功能";
-            }
+            initSpeechRecognition();
         });
     </script>
 </body>
