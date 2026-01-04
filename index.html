@@ -369,7 +369,7 @@
         }
         
         // 发送消息
-        function sendMsg() {
+        async function sendMsg() {
             const msg = document.getElementById('inputMsg').value.trim();
             const logs = document.getElementById('logs');
             
@@ -383,21 +383,44 @@
             updateStatus('thinking', '思考中...');
             addMessage('思考中...', 'sys');
             
-            // 模拟AI回复
-            setTimeout(() => {
-                // 这里应该是调用API获取回复
-                const response = "这是模拟回复。实际应该调用DeepSeek API获取真实回复。";
+            try {
+                // 调用Netlify Function获取真实回复
+                const res = await fetch('/.netlify/functions/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: msg })
+                });
+
+                const data = await res.json();
                 
                 // 移除"思考中..."消息
                 logs.removeChild(logs.lastChild);
                 
-                // 添加AI回复
-                addMessage(response, 'sys');
-                updateStatus('idle', '待命...');
+                if (data.choices && data.choices.length > 0) {
+                    const responseText = data.choices[0].message.content;
+                    
+                    // 添加AI回复
+                    addMessage(responseText, 'sys');
+                    updateStatus('idle', '待命...');
+                    
+                    // 语音播报
+                    speakResponse(responseText);
+                } else if (data.error) {
+                    addMessage("错误: " + data.error, 'sys');
+                    updateStatus('error', 'API错误');
+                } else {
+                    addMessage("未知响应格式", 'sys');
+                    updateStatus('error', '响应错误');
+                }
+            } catch (err) {
+                // 移除"思考中..."消息
+                logs.removeChild(logs.lastChild);
                 
-                // 语音播报
-                speakResponse(response);
-            }, 1500);
+                addMessage("请求失败: " + err.message, 'sys');
+                updateStatus('error', '请求失败');
+            }
         }
         
         // 添加消息到聊天记录
