@@ -381,9 +381,9 @@
     <!-- 机器人交互功能 -->
     <script>
         // === 配置 ===
-        const CONFIG = {
+        const API_CONFIG = {
         //    key: '', // API密钥现在通过Netlify环境变量管理
-            api: '/.netlify/functions/deepseek-proxy' // 使用Netlify函数代理解决CORS问题
+            //api: '/.netlify/functions/chat' // 使用Netlify函数代理解决CORS问题
         };
 
         const bot = document.getElementById('bot');
@@ -450,7 +450,7 @@
 
             try {
                 console.log("开始调用DeepSeek API...");
-                const res = await fetch(CONFIG.api, {
+                const res = await fetch(API_CONFIG.api, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
