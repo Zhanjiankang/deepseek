@@ -7,10 +7,14 @@
     
     <!-- Bootstrap 5 CSS框架 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome 图标库 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
+        <!-- Font Awesome 图标库 -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <!-- 自定义样式文件 -->
+        <link rel="stylesheet" href="style.css">
+        <!-- Model Viewer 3D模型查看器 -->
+        <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+        
+        <style>
         :root {
             --cyan: #00f3ff;
             --dark: #e6e6f0;
@@ -214,11 +218,231 @@
     </style>
 </head>
 <body>
+    <!-- ==================== 网站头部区域 ==================== -->
+    <div class="header">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid">
+                <!-- 网站品牌标识 -->
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-robot me-2"></i>DeepSeek AI助手
+                </a>
+                
+                <!-- 移动端导航切换按钮 -->
+                <button class="navbar-toggler" type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#navbarNav" 
+                        aria-controls="navbarNav" 
+                        aria-expanded="false" 
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- 导航菜单 -->
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 教学模块下拉菜单 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">教学</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="教学/可视化/visualization.html">可视化</a></li>
+                                <li><a class="dropdown-item" href="教学/重难点/index.html">重难点</a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- 理论模块下拉菜单 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">理论</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="理论/高中/index.html">高中物理</a></li>
+                                <li><a class="dropdown-item" href="理论/竞赛/index.html">竞赛一轮</a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- 工具模块下拉菜单 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">工具</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="工具/班级排名.html">排名分析</a></li>
+                                <li><a class="dropdown-item" href="工具/物理图片/index.html">相关图片</a></li>
+                                <li><a class="dropdown-item" href="工具/参考文章/index.html">资料分享</a></li>
+                            </ul>
+                        </li>
+                        
+                        <!-- 单页导航链接 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="相关网站/index.html">相关网站</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="班级纪实/index.html">班级纪实</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- 当前日期显示区域 -->
+                <div class="date-display" id="currentDate">----年--月--日 星期-</div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ==================== 登录模态框 ==================== -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel"><i class="fas fa-user me-2"></i>用户登录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="alert alert-danger d-none" id="loginError">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="loginErrorText">用户名或密码错误</span>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="loginBtn">登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 主内容区域 ==================== -->
+    <div class="container mt-4">
+        <!-- 网格布局容器 - 2x2布局 -->
+        <div class="grid-container">
+            
+            <!-- 网格项1：最近更新模块 -->
+            <div class="grid-item update-item">
+                <div class="grid-header">
+                    <h3 class="grid-title"><i class="fas fa-newspaper me-2"></i>最近更新</h3>
+                    <!-- 刷新按钮 -->
+                    <button id="refreshUpdates" class="btn-refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="grid-content">
+                    <!-- 最后更新时间显示 -->
+                    <div id="lastUpdated" class="small mb-2" style="color: var(--text-gray);"></div>
+                    
+                    <!-- 加载指示器 -->
+                    <div id="loadingIndicator" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <p class="mt-2 small" style="color: var(--text-gray);">正在加载最新内容...</p>
+                    </div>
+                    
+                    <!-- 更新列表容器 -->
+                    <ul id="latestUpdatesList" class="list d-none"></ul>
+                    
+                    <!-- 错误消息显示 -->
+                    <div id="errorMessage" class="alert alert-danger d-none small mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorText">加载内容时出现错误</span>
+                    </div>
+                    
+                    <!-- 空状态消息 -->
+                    <div id="emptyMessage" class="alert alert-info d-none small mb-0">
+                        <i class="fas fa-info-circle me-2"></i>暂无更新内容
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网格项2：随机点名模块 -->
+            <div class="grid-item rollcall-item">
+                <div class="grid-header">
+                    <h3 class="grid-title"><i class="fas fa-users me-2"></i>随机点名</h3>
+                    <!-- 班级选择和用户信息 -->
+                    <div class="user-info">
+                        <span id="userDisplay" class="d-none">
+                            <i class="fas fa-user me-1"></i>
+                            <span id="usernameDisplay"></span>
+                            <button id="logoutBtn" class="btn btn-sm btn-outline-secondary ms-2">退出</button>
+                        </span>
+                        <button id="loginTrigger" class="btn btn-sm btn-outline-primary">登录</button>
+                    </div>
+                </div>
+                <div class="grid-content">
+                    <!-- 顶部：班级选择区域 -->
+                    <div id="classSelection" class="d-none mb-4">
+                        <div class="d-flex align-items-center justify-content-between gap-3">
+                            <label for="classSelect" class="form-label mb-0">选择班级：</label>
+                            <select class="form-select flex-grow-1" id="classSelect">
+                                <option value="">请选择班级</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 底部：点名按钮和学生显示区域 -->
+                    <div class="text-center w-100">
+                        <!-- 点名按钮 -->
+                        <button class="btn-action mb-4" id="rollcallBtn" disabled>
+                            <i class="fas fa-random me-2"></i>开始随机点名
+                        </button>
+                        <!-- 被选中学生显示区域 -->
+                        <div id="selectedStudent">请先登录并选择班级</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 网格项3：今日格言模块 -->
+            <div class="grid-item quote-item">
+                <div class="grid-header">
+                    <h3 class="grid-title"><i class="fas fa-quote-left me-2"></i>今日格言</h3>
+                    <!-- 更换格言按钮 -->
+                    <button id="changeQuote" class="btn-refresh">
+                        <i class="fas fa-sync-alt"></i> 换一句
+                    </button>
+                </div>
+                <div class="grid-content">
+                    <!-- 格言文本显示 -->
+                    <p id="quoteText">格言加载中...</p>
+                    <!-- 格言作者显示 -->
+                    <p id="quoteAuthor"></p>
+                </div>
+            </div>
+            
+            <!-- 网格项4：每日一问模块 -->
+            <div class="grid-item question-item">
+                <div class="grid-header">
+                    <h3 class="grid-title"><i class="fas fa-question-circle me-2"></i>每日一问</h3>
+                    <!-- 更换问题按钮 -->
+                    <button id="changeQuestion" class="btn-refresh">
+                        <i class="fas fa-sync-alt"></i> 换一题
+                    </button>
+                </div>
+                <div class="grid-content">
+                    <!-- 问题文本显示 -->
+                    <p id="questionText">问题加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 网站页脚区域 ==================== -->
+    <footer>
+        <div class="container">
+            <p class="mb-0">© 2025 DeepSeek AI助手 | 智能语音交互系统</p>
+            <p class="small mt-2 opacity-75">基于Web Speech API与DeepSeek API构建</p>
+        </div>
+    </footer>
+
     <!-- 3D 模型：使用最稳定的 RobotExpressive -->
     <!-- 关键参数：environment-image="neutral" 防止黑屏 -->
-    <!-- <model-viewer 
+    <model-viewer 
         id="bot" 
-        src="/Robot.glb" 
+        src="Robot.glb" 
         environment-image="neutral" 
         shadow-intensity="1"
         camera-controls 
@@ -227,7 +451,7 @@
         autoplay
         animation-name="Idle"
         style="display: none;">
-    </model-viewer> -->
+    </model-viewer>
 
     <div class="hint" style="display: none;">/// 点击机器人终端建立连接 ///</div>
 
@@ -485,10 +709,141 @@
             }
         }
         
+        // 更新日期显示
+        function updateDate() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            };
+            const dateStr = now.toLocaleDateString('zh-CN', options);
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+        
+        // 初始化网格模块功能
+        function initGridModules() {
+            // 登录按钮点击事件
+            document.getElementById('loginTrigger')?.addEventListener('click', function() {
+                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                loginModal.show();
+            });
+            
+            // 登录按钮提交事件
+            document.getElementById('loginBtn')?.addEventListener('click', function() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const loginError = document.getElementById('loginError');
+                
+                // 简单验证
+                if (username && password) {
+                    // 模拟登录成功
+                    document.getElementById('userDisplay').classList.remove('d-none');
+                    document.getElementById('usernameDisplay').textContent = username;
+                    document.getElementById('loginTrigger').classList.add('d-none');
+                    document.getElementById('classSelection').classList.remove('d-none');
+                    document.getElementById('rollcallBtn').disabled = false;
+                    
+                    // 关闭模态框
+                    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                    loginModal.hide();
+                    
+                    // 清空表单
+                    document.getElementById('loginForm').reset();
+                    loginError.classList.add('d-none');
+                } else {
+                    loginError.classList.remove('d-none');
+                }
+            });
+            
+            // 退出按钮事件
+            document.getElementById('logoutBtn')?.addEventListener('click', function() {
+                document.getElementById('userDisplay').classList.add('d-none');
+                document.getElementById('loginTrigger').classList.remove('d-none');
+                document.getElementById('classSelection').classList.add('d-none');
+                document.getElementById('rollcallBtn').disabled = true;
+                document.getElementById('selectedStudent').textContent = '请先登录并选择班级';
+            });
+            
+            // 随机点名按钮事件
+            document.getElementById('rollcallBtn')?.addEventListener('click', function() {
+                const students = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
+                const randomStudent = students[Math.floor(Math.random() * students.length)];
+                document.getElementById('selectedStudent').innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-user-check me-2"></i>
+                        随机选中的学生：<strong>${randomStudent}</strong>
+                    </div>
+                `;
+            });
+            
+            // 刷新最近更新
+            document.getElementById('refreshUpdates')?.addEventListener('click', function() {
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                const latestUpdatesList = document.getElementById('latestUpdatesList');
+                const errorMessage = document.getElementById('errorMessage');
+                const emptyMessage = document.getElementById('emptyMessage');
+                
+                loadingIndicator.classList.remove('d-none');
+                latestUpdatesList.classList.add('d-none');
+                errorMessage.classList.add('d-none');
+                emptyMessage.classList.add('d-none');
+                
+                // 模拟加载
+                setTimeout(() => {
+                    loadingIndicator.classList.add('d-none');
+                    latestUpdatesList.classList.remove('d-none');
+                    latestUpdatesList.innerHTML = `
+                        <li><i class="fas fa-check-circle text-success me-2"></i>新增语音交互功能</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>优化用户界面设计</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>修复已知问题</li>
+                    `;
+                    document.getElementById('lastUpdated').textContent = '最后更新：刚刚';
+                }, 1000);
+            });
+            
+            // 更换格言
+            document.getElementById('changeQuote')?.addEventListener('click', function() {
+                const quotes = [
+                    { text: "学而不思则罔，思而不学则殆。", author: "孔子" },
+                    { text: "知识就是力量。", author: "培根" },
+                    { text: "天行健，君子以自强不息。", author: "《周易》" },
+                    { text: "千里之行，始于足下。", author: "老子" }
+                ];
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                document.getElementById('quoteText').textContent = randomQuote.text;
+                document.getElementById('quoteAuthor').textContent = `—— ${randomQuote.author}`;
+            });
+            
+            // 更换问题
+            document.getElementById('changeQuestion')?.addEventListener('click', function() {
+                const questions = [
+                    "什么是人工智能？",
+                    "机器学习与深度学习的区别是什么？",
+                    "如何理解神经网络的工作原理？",
+                    "什么是自然语言处理？"
+                ];
+                const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+                document.getElementById('questionText').textContent = randomQuestion;
+            });
+            
+            // 初始化数据
+            document.getElementById('refreshUpdates').click();
+            document.getElementById('changeQuote').click();
+            document.getElementById('changeQuestion').click();
+        }
+        
         // 初始化
         window.addEventListener('load', function() {
             // 初始化语音识别
             initSpeechRecognition();
+            
+            // 更新日期
+            updateDate();
+            
+            // 初始化网格模块
+            initGridModules();
             
             // 绑定事件
             document.getElementById('voiceBtn').addEventListener('click', toggleVoiceInput);
@@ -502,5 +857,8 @@
             addMessage("您好！我是DeepSeek AI助手，请问有什么可以帮您？", 'sys');
         });
     </script>
+    
+    <!-- Bootstrap JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
