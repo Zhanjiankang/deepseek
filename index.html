@@ -36,6 +36,24 @@
         button:hover {
             background-color: #45a049;
         }
+        #voiceInputBtn {
+            background-color: #2196F3;
+        }
+        #voiceInputBtn:hover {
+            background-color: #0b7dda;
+        }
+        #voiceOutputBtn {
+            background-color: #ff9800;
+        }
+        #voiceOutputBtn:hover {
+            background-color: #e68900;
+        }
+        #stopVoiceBtn {
+            background-color: #f44336;
+        }
+        #stopVoiceBtn:hover {
+            background-color: #da190b;
+        }
         #response {
             margin-top: 20px;
             padding: 15px;
@@ -51,6 +69,14 @@
             padding: 10px;
             margin: 20px 0;
         }
+        .recording {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -63,10 +89,26 @@
     
     <input type="text" id="inputMsg" placeholder="输入你的问题（例如：你好，介绍一下你自己）">
     <button onclick="askDeepSeek()">发送</button>
+    <button id="voiceInputBtn" onclick="toggleVoiceInput()">🎤 语音输入</button>
+    
+    <div id="recordingStatus" style="margin-top: 10px; color: #666; font-size: 14px; display: none;">
+        <span id="recordingIndicator" style="color: red; font-weight: bold;">●</span> 正在录音...
+    </div>
     
     <div id="response" style="margin-top: 20px; white-space: pre-wrap;"></div>
+    
+    <div style="margin-top: 10px;">
+        <button id="voiceOutputBtn" onclick="speakResponse()" disabled>🔊 语音播放</button>
+        <button id="stopVoiceBtn" onclick="stopSpeaking()" disabled style="margin-left: 10px;">⏹️ 停止</button>
+    </div>
 
     <script>
+        // 语音识别和语音合成变量
+        let recognition = null;
+        let isRecording = false;
+        let synthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        
         async function askDeepSeek() {
             const msg = document.getElementById('inputMsg').value;
             const output = document.getElementById('response');
@@ -77,6 +119,10 @@
             }
             
             output.innerText = "思考中...";
+            
+            // 禁用语音输出按钮
+            document.getElementById('voiceOutputBtn').disabled = true;
+            document.getElementById('stopVoiceBtn').disabled = true;
             
             try {
                 // 调用我们刚才写的 Netlify Function
@@ -92,7 +138,14 @@
                 const data = await res.json();
                 
                 if (data.choices && data.choices.length > 0) {
-                    output.innerText = data.choices[0].message.content;
+                    const responseText = data.choices[0].message.content;
+                    output.innerText = responseText;
+                    
+                    // 启用语音输出按钮
+                    document.getElementById('voiceOutputBtn').disabled = false;
+                    
+                    // 保存响应文本供语音合成使用
+                    output.dataset.responseText = responseText;
                 } else if (data.error) {
                     output.innerText = "错误: " + data.error;
                 } else {
@@ -103,10 +156,169 @@
             }
         }
         
+        // 语音输入功能
+        function toggleVoiceInput() {
+            if (!recognition) {
+                initializeSpeechRecognition();
+            }
+            
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+        
+        function initializeSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert("您的浏览器不支持语音识别功能，请使用 Chrome 或 Edge 浏览器");
+                return;
+            }
+            
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = function() {
+                isRecording = true;
+                updateRecordingUI(true);
+            };
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('inputMsg').value = transcript;
+                
+                // 自动发送请求
+                setTimeout(() => {
+                    askDeepSeek();
+                }, 500);
+            };
+            
+            recognition.onerror = function(event) {
+                console.error("语音识别错误:", event.error);
+                stopRecording();
+                
+                if (event.error === 'not-allowed') {
+                    alert("请允许浏览器使用麦克风权限");
+                }
+            };
+            
+            recognition.onend = function() {
+                stopRecording();
+            };
+        }
+        
+        function startRecording() {
+            if (recognition) {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error("开始录音失败:", error);
+                }
+            }
+        }
+        
+        function stopRecording() {
+            if (recognition && isRecording) {
+                try {
+                    recognition.stop();
+                } catch (error) {
+                    console.error("停止录音失败:", error);
+                }
+                isRecording = false;
+                updateRecordingUI(false);
+            }
+        }
+        
+        function updateRecordingUI(recording) {
+            const statusDiv = document.getElementById('recordingStatus');
+            const indicator = document.getElementById('recordingIndicator');
+            const voiceBtn = document.getElementById('voiceInputBtn');
+            
+            if (recording) {
+                statusDiv.style.display = 'block';
+                indicator.classList.add('recording');
+                voiceBtn.textContent = '⏹️ 停止录音';
+                voiceBtn.style.backgroundColor = '#f44336';
+            } else {
+                statusDiv.style.display = 'none';
+                indicator.classList.remove('recording');
+                voiceBtn.textContent = '🎤 语音输入';
+                voiceBtn.style.backgroundColor = '#2196F3';
+            }
+        }
+        
+        // 语音输出功能
+        function speakResponse() {
+            const output = document.getElementById('response');
+            const responseText = output.dataset.responseText || output.innerText;
+            
+            if (!responseText || responseText === "思考中..." || responseText.includes("错误") || responseText.includes("失败")) {
+                alert("没有可播放的回复内容");
+                return;
+            }
+            
+            // 停止当前正在播放的语音
+            if (synthesis.speaking) {
+                synthesis.cancel();
+            }
+            
+            currentUtterance = new SpeechSynthesisUtterance(responseText);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 1.0;
+            currentUtterance.pitch = 1.0;
+            currentUtterance.volume = 1.0;
+            
+            currentUtterance.onstart = function() {
+                document.getElementById('voiceOutputBtn').disabled = true;
+                document.getElementById('stopVoiceBtn').disabled = false;
+            };
+            
+            currentUtterance.onend = function() {
+                document.getElementById('voiceOutputBtn').disabled = false;
+                document.getElementById('stopVoiceBtn').disabled = true;
+            };
+            
+            currentUtterance.onerror = function(event) {
+                console.error("语音合成错误:", event);
+                document.getElementById('voiceOutputBtn').disabled = false;
+                document.getElementById('stopVoiceBtn').disabled = true;
+                alert("语音播放失败，请重试");
+            };
+            
+            synthesis.speak(currentUtterance);
+        }
+        
+        function stopSpeaking() {
+            if (synthesis.speaking) {
+                synthesis.cancel();
+                document.getElementById('voiceOutputBtn').disabled = false;
+                document.getElementById('stopVoiceBtn').disabled = true;
+            }
+        }
+        
         // 按回车键发送
         document.getElementById('inputMsg').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 askDeepSeek();
+            }
+        });
+        
+        // 页面加载时检查语音合成支持
+        window.addEventListener('load', function() {
+            if (!window.speechSynthesis) {
+                document.getElementById('voiceOutputBtn').disabled = true;
+                document.getElementById('voiceOutputBtn').title = "您的浏览器不支持语音合成功能";
+            }
+            
+            // 检查语音识别支持
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('voiceInputBtn').disabled = true;
+                document.getElementById('voiceInputBtn').title = "您的浏览器不支持语音识别功能";
             }
         });
     </script>
