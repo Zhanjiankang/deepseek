@@ -9,8 +9,9 @@ export const handler = async (event, context) => {
   try {
     // 2. 解析前端传来的数据
     const body = JSON.parse(event.body);
-    const userMessage = body.message || "你好";
-
+    //const userMessage = body.message || "你好";
+// 优先尝试读取 messages 数组里的内容，如果没有再尝试 message 字段，最后才默认 "你好"
+    const userMessage = (body.messages && body.messages[0] && body.messages[0].content) || body.message || "你好";
     // 3. 从环境变量获取 API Key
     const API_KEY = process.env.DEEPSEEK_API_KEY;
 
