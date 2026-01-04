@@ -28,7 +28,7 @@
     <!-- 机器人界面样式 -->
     <style>
         /* 机器人界面样式 */
-        :root { --cyan: #00f3ff; --dark: #e6e6f0; }
+        :root { --cyan: #00f3ff; --dark: #ffffff; }
         
         /* 3D 舞台 - 右下角定位（更小尺寸，无边框） */
         model-viewer {
@@ -49,7 +49,7 @@
             display: none; position: fixed; bottom: 20px; right: 240px;
             width: 350px; height: 500px;
             background: rgba(255, 255, 255, 0.7);
-            border: 1px solid #000; border-radius: 10px;
+            border: 1px solid #ffffff; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             flex-direction: column; overflow: hidden; backdrop-filter: blur(5px);
             z-index: 1001;
@@ -83,14 +83,14 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background: rgba(0, 243, 255, 0.8);
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5faff 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 1000;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 15px linear-gradient(135deg, #e3f2fd 0%, #f5faff 100%);
             transition: all 0.3s ease;
         }
         
