@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!-- 
+        index.html - 物含妙理网站主页面
+        文件说明：
+        1. 此文件是网站的主HTML结构文件
+        2. 实现了HTML结构与样式、逻辑的完全分离
+        3. 使用外部CSS和JavaScript文件
+        4. 采用响应式设计，支持多设备访问
+    -->
+    
+    <!-- 基础元数据 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek AI助手 - 语音交互版</title>
+    <title>物含妙理 - 边城</title>
     
+    <!-- 外部样式表引用 -->
     <!-- Bootstrap 5 CSS框架 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- Font Awesome 图标库 -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <!-- 自定义样式文件 -->
-        <link rel="stylesheet" href="style.css">
-        <!-- Model Viewer 3D模型查看器 -->
-        <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-        
-        <style>
-        :root {
-            --cyan: #00f3ff;
-            --dark: #e6e6f0;
-        }
+    <!-- Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 自定义样式文件 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Model Viewer 3D模型查看器 -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    
+    <!-- 机器人界面样式 -->
+    <style>
+        /* 机器人界面样式 */
+        :root { --cyan: #00f3ff; --dark: #e6e6f0; }
         
         /* 3D 舞台 - 右下角定位（更小尺寸，无边框） */
         model-viewer {
@@ -36,28 +46,18 @@
         
         /* 聊天面板 - 置于机器人左侧（白色透明背景，黑色边框） */
         #panel {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 240px;
-            width: 350px;
-            height: 500px;
+            display: none; position: fixed; bottom: 20px; right: 240px;
+            width: 350px; height: 500px;
             background: rgba(255, 255, 255, 0.7);
-            border: 1px solid #000;
-            border-radius: 10px;
+            border: 1px solid #000; border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            flex-direction: column;
-            overflow: hidden;
-            backdrop-filter: blur(5px);
+            flex-direction: column; overflow: hidden; backdrop-filter: blur(5px);
             z-index: 1001;
         }
         
         .panel-header {
-            padding: 15px;
-            border-bottom: 1px solid #000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px; border-bottom: 1px solid #000;
+            display: flex; justify-content: space-between; align-items: center;
             background: rgba(255, 255, 255, 0.3);
             color: #000;
         }
@@ -66,61 +66,15 @@
             color: #000;
         }
         
-        #logs {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        #logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
-        .msg {
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 13px;
-            line-height: 1.4;
-            max-width: 85%;
-        }
+        .msg { padding: 10px; border-radius: 5px; font-size: 13px; line-height: 1.4; max-width: 85%; }
+        .sys { color: #000; border-left: 2px solid var(--cyan); background: rgba(0, 243, 255, 0.1); align-self: flex-start; }
+        .user { color: #000; background: rgba(200, 200, 200, 0.3); align-self: flex-end; border: 1px solid #ccc; }
         
-        .sys {
-            color: #000;
-            border-left: 2px solid var(--cyan);
-            background: rgba(0, 243, 255, 0.1);
-            align-self: flex-start;
-        }
-        
-        .user {
-            color: #000;
-            background: rgba(200, 200, 200, 0.3);
-            align-self: flex-end;
-            border: 1px solid #ccc;
-        }
-        
-        .input-zone {
-            padding: 15px;
-            border-top: 1px solid #000;
-            display: flex;
-            gap: 10px;
-        }
-        
-        input {
-            flex: 1;
-            background: transparent;
-            border: 1px solid #000;
-            color: #000;
-            padding: 8px;
-            outline: none;
-        }
-        
-        button {
-            background: #000;
-            color: #fff;
-            border: none;
-            padding: 0 15px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .input-zone { padding: 15px; border-top: 1px solid #000; display: flex; gap: 10px; }
+        input { flex: 1; background: transparent; border: 1px solid #000; color: #000; padding: 8px; outline: none; }
+        button { background: #000; color: #fff; border: none; padding: 0 15px; font-weight: bold; cursor: pointer; }
         
         /* 机器人图标样式 */
         .robot-icon {
@@ -152,13 +106,8 @@
         
         /* 交互提示 */
         .hint {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            color: rgba(255,255,255,0.5);
-            font-size: 12px;
-            pointer-events: none;
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none;
         }
         
         /* 语音按钮样式 */
@@ -224,21 +173,21 @@
             <div class="container-fluid">
                 <!-- 网站品牌标识 -->
                 <a class="navbar-brand" href="#">
-                    <i class="fas fa-robot me-2"></i>DeepSeek AI助手
+                    <i class="fas fa-atom me-2"></i>物含妙理
                 </a>
                 
                 <!-- 移动端导航切换按钮 -->
                 <button class="navbar-toggler" type="button" 
                         data-bs-toggle="collapse" 
-                        data-bs-target="#navbarNav" 
-                        aria-controls="navbarNav" 
+                        data-bs-target="#navbarNavDropdown" 
+                        aria-controls="navbarNavDropdown" 
                         aria-expanded="false" 
                         aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
                 <!-- 导航菜单 -->
-                <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <div class="collapse navbar-collapse justify-content-center" id="navbarNavDropdown">
                     <ul class="navbar-nav">
                         <!-- 教学模块下拉菜单 -->
                         <li class="nav-item dropdown">
@@ -433,8 +382,8 @@
     <!-- ==================== 网站页脚区域 ==================== -->
     <footer>
         <div class="container">
-            <p class="mb-0">© 2025 DeepSeek AI助手 | 智能语音交互系统</p>
-            <p class="small mt-2 opacity-75">基于Web Speech API与DeepSeek API构建</p>
+            <p class="mb-0">© 2025 物含妙理 | 边城</p>
+            <p class="small mt-2 opacity-75">基于Web Speech API构建</p>
         </div>
     </footer>
 
@@ -709,141 +658,10 @@
             }
         }
         
-        // 更新日期显示
-        function updateDate() {
-            const now = new Date();
-            const options = { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                weekday: 'long'
-            };
-            const dateStr = now.toLocaleDateString('zh-CN', options);
-            document.getElementById('currentDate').textContent = dateStr;
-        }
-        
-        // 初始化网格模块功能
-        function initGridModules() {
-            // 登录按钮点击事件
-            document.getElementById('loginTrigger')?.addEventListener('click', function() {
-                const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                loginModal.show();
-            });
-            
-            // 登录按钮提交事件
-            document.getElementById('loginBtn')?.addEventListener('click', function() {
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                const loginError = document.getElementById('loginError');
-                
-                // 简单验证
-                if (username && password) {
-                    // 模拟登录成功
-                    document.getElementById('userDisplay').classList.remove('d-none');
-                    document.getElementById('usernameDisplay').textContent = username;
-                    document.getElementById('loginTrigger').classList.add('d-none');
-                    document.getElementById('classSelection').classList.remove('d-none');
-                    document.getElementById('rollcallBtn').disabled = false;
-                    
-                    // 关闭模态框
-                    const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-                    loginModal.hide();
-                    
-                    // 清空表单
-                    document.getElementById('loginForm').reset();
-                    loginError.classList.add('d-none');
-                } else {
-                    loginError.classList.remove('d-none');
-                }
-            });
-            
-            // 退出按钮事件
-            document.getElementById('logoutBtn')?.addEventListener('click', function() {
-                document.getElementById('userDisplay').classList.add('d-none');
-                document.getElementById('loginTrigger').classList.remove('d-none');
-                document.getElementById('classSelection').classList.add('d-none');
-                document.getElementById('rollcallBtn').disabled = true;
-                document.getElementById('selectedStudent').textContent = '请先登录并选择班级';
-            });
-            
-            // 随机点名按钮事件
-            document.getElementById('rollcallBtn')?.addEventListener('click', function() {
-                const students = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十'];
-                const randomStudent = students[Math.floor(Math.random() * students.length)];
-                document.getElementById('selectedStudent').innerHTML = `
-                    <div class="alert alert-success">
-                        <i class="fas fa-user-check me-2"></i>
-                        随机选中的学生：<strong>${randomStudent}</strong>
-                    </div>
-                `;
-            });
-            
-            // 刷新最近更新
-            document.getElementById('refreshUpdates')?.addEventListener('click', function() {
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                const latestUpdatesList = document.getElementById('latestUpdatesList');
-                const errorMessage = document.getElementById('errorMessage');
-                const emptyMessage = document.getElementById('emptyMessage');
-                
-                loadingIndicator.classList.remove('d-none');
-                latestUpdatesList.classList.add('d-none');
-                errorMessage.classList.add('d-none');
-                emptyMessage.classList.add('d-none');
-                
-                // 模拟加载
-                setTimeout(() => {
-                    loadingIndicator.classList.add('d-none');
-                    latestUpdatesList.classList.remove('d-none');
-                    latestUpdatesList.innerHTML = `
-                        <li><i class="fas fa-check-circle text-success me-2"></i>新增语音交互功能</li>
-                        <li><i class="fas fa-check-circle text-success me-2"></i>优化用户界面设计</li>
-                        <li><i class="fas fa-check-circle text-success me-2"></i>修复已知问题</li>
-                    `;
-                    document.getElementById('lastUpdated').textContent = '最后更新：刚刚';
-                }, 1000);
-            });
-            
-            // 更换格言
-            document.getElementById('changeQuote')?.addEventListener('click', function() {
-                const quotes = [
-                    { text: "学而不思则罔，思而不学则殆。", author: "孔子" },
-                    { text: "知识就是力量。", author: "培根" },
-                    { text: "天行健，君子以自强不息。", author: "《周易》" },
-                    { text: "千里之行，始于足下。", author: "老子" }
-                ];
-                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-                document.getElementById('quoteText').textContent = randomQuote.text;
-                document.getElementById('quoteAuthor').textContent = `—— ${randomQuote.author}`;
-            });
-            
-            // 更换问题
-            document.getElementById('changeQuestion')?.addEventListener('click', function() {
-                const questions = [
-                    "什么是人工智能？",
-                    "机器学习与深度学习的区别是什么？",
-                    "如何理解神经网络的工作原理？",
-                    "什么是自然语言处理？"
-                ];
-                const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-                document.getElementById('questionText').textContent = randomQuestion;
-            });
-            
-            // 初始化数据
-            document.getElementById('refreshUpdates').click();
-            document.getElementById('changeQuote').click();
-            document.getElementById('changeQuestion').click();
-        }
-        
         // 初始化
         window.addEventListener('load', function() {
             // 初始化语音识别
             initSpeechRecognition();
-            
-            // 更新日期
-            updateDate();
-            
-            // 初始化网格模块
-            initGridModules();
             
             // 绑定事件
             document.getElementById('voiceBtn').addEventListener('click', toggleVoiceInput);
@@ -858,7 +676,12 @@
         });
     </script>
     
-    <!-- Bootstrap JavaScript Bundle with Popper -->
+    <!-- ==================== JavaScript引用 ==================== -->
+    <!-- jQuery库 -->
+    <script src="https://code.jquery.com/jquery-3.6.0/min.js"></script>
+    <!-- Bootstrap 5 JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定义JavaScript功能 -->
+    <script src="script.js"></script>
 </body>
 </html>
