@@ -1,0 +1,12 @@
+{
+  "name": "my-deepseek-app",
+  "version": "1.0.0",
+  "description": "DeepSeek API 代理应用，部署在 Netlify",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["deepseek", "netlify", "api", "proxy"],
+  "author": "",
+  "license": "MIT"
+}
