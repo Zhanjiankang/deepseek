@@ -28,25 +28,26 @@
     <!-- 机器人界面样式 -->
     <style>
         /* 机器人界面样式 */
-        :root { --cyan: #00f3ff; --dark: #ffffff; }
+        :root { --cyan: rgba(255, 255, 255, 0); --dark: #ffffff; }
         
         /* 3D 舞台 - 右下角定位（更小尺寸，无边框） */
         model-viewer {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            right: 10px;
             width: 150px;
             height: 250px;
-            background: radial-gradient(circle at center, #f8f9fb 0%, #f0eeee 100%);
+            /* 设置白色半透明背景 */
+            background: rgba(255, 255, 255, 0);
             --progress-bar-color: var(--cyan);
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 20px rgba(15, 14, 14, 0);
             z-index: 1000;
         }
         
         /* 聊天面板 - 置于机器人左侧（白色透明背景，黑色边框） */
         #panel {
-            display: none; position: fixed; bottom: 20px; right: 240px;
+            display: none; position: fixed; bottom: 20px; right: 165px;
             width: 350px; height: 500px;
             background: rgba(255, 255, 255, 0.7);
             border: 1px solid #ffffff; border-radius: 10px;
@@ -69,7 +70,7 @@
         #logs { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         
         .msg { padding: 10px; border-radius: 5px; font-size: 13px; line-height: 1.4; max-width: 85%; }
-        .sys { color: #000; border-left: 2px solid var(--cyan); background: rgba(0, 243, 255, 0.1); align-self: flex-start; }
+        .sys { color: #000; border-left: 2px solid var(--cyan); background: rgba(0, 243, 255, 0); align-self: flex-start; }
         .user { color: #000; background: rgba(200, 200, 200, 0.3); align-self: flex-end; border: 1px solid #ccc; }
         
         .input-zone { padding: 15px; border-top: 1px solid #000; display: flex; gap: 10px; }
@@ -101,7 +102,7 @@
         
         .robot-icon i {
             font-size: 24px;
-            color: #000;
+            color: #080808;
         }
         
         /* 交互提示 */
@@ -360,7 +361,7 @@
     <!-- 交互面板 -->
     <div id="panel" style="display: none;">
         <div class="panel-header">
-            <span><i class="fas fa-terminal"></i> DIRECT LINK</span>
+            <span><i class="fas fa-terminal"></i> JARVIS 助手</span>
             <i class="fas fa-times" style="cursor:pointer" onclick="toggleRobot()"></i>
         </div>
         <div id="logs"></div>
