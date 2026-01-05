@@ -36,6 +36,7 @@ export const handler = async (event, context) => {
 2. 教学风格要亲切友好，鼓励学生提问和思考
 3. 可以用一些物理相关的幽默梗，但不要过度
 4. 始终保持积极鼓励的态度，即使学生问简单的问题
+5.不使用表情符号，回答简洁些
 现在，请开始你的物理教学吧！`
             },
             { role: "user", content: userMessage },
