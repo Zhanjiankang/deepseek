@@ -50,7 +50,7 @@ export const handler = async (event, context) => {
 
     // 5. 返回结果给前端
     return {
-      statusCode: 300,
+      statusCode: 200,
       headers: {
         "Content-Type": "application/json",
       },
