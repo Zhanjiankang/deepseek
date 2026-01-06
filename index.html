@@ -640,9 +640,21 @@
         
         // 初始化语音识别
         function initSpeechRecognition() {
+            // 详细的浏览器兼容性检查
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+            
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
+                
+                // 移动端特定设置
+                if (isMobile) {
+                    recognition.continuous = true; // 移动端更适合连续识别
+                    recognition.interimResults = true; // 获取临时结果
+                }
                 recognition.continuous = false;
                 recognition.interimResults = false;
                 recognition.lang = 'zh-CN';
@@ -822,21 +834,50 @@
         }
 
         function speak(text) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-CN';
-            u.rate = 1.1;
+            // 检查语音合成支持情况
+            if (!('speechSynthesis' in window)) {
+                console.warn("浏览器不支持语音合成");
+                addLog("当前浏览器不支持语音朗读功能", 'sys');
+                return false;
+            }
 
-            u.onstart = () => {
-                // 关键修正：这里只改动画名，不改 src，不会导致重载
-                bot.animationName = "Wave"; // 说话时挥手/动作
-            };
+            try {
+                // 移动端特定设置
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = isMobile ? 1.0 : 1.1; // 移动端语速稍慢
+                
+                // 取消当前正在进行的语音
+                window.speechSynthesis.cancel();
 
-            u.onend = () => {
-                bot.animationName = "Idle"; // 说完恢复待机
-            };
+                utterance.onstart = () => {
+                    bot.animationName = "Wave"; // 说话时挥手/动作
+                    addLog("正在朗读回复...", 'sys');
+                };
 
-            window.speechSynthesis.speak(u);
+                utterance.onend = () => {
+                    bot.animationName = "Idle"; // 说完恢复待机
+                };
+
+                utterance.onerror = (event) => {
+                    console.error("语音合成错误:", event.error);
+                    let errorMsg = "语音朗读失败";
+                    if (event.error === 'interrupted') {
+                        errorMsg = "语音朗读被中断";
+                    } else if (event.error === 'synthesis-failed') {
+                        errorMsg = "语音生成失败";
+                    }
+                    addLog(errorMsg, 'sys');
+                };
+
+                window.speechSynthesis.speak(utterance);
+                return true;
+            } catch (error) {
+                console.error("语音合成初始化失败:", error);
+                addLog("语音朗读功能初始化失败", 'sys');
+                return false;
+            }
         }
 
         function addLog(txt, type) {
