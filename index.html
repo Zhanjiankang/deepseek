@@ -640,9 +640,21 @@
         
         // 初始化语音识别
         function initSpeechRecognition() {
+            // 详细的浏览器兼容性检查
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+            
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 recognition = new SpeechRecognition();
+                
+                // 移动端特定设置
+                if (isMobile) {
+                    recognition.continuous = true; // 移动端更适合连续识别
+                    recognition.interimResults = true; // 获取临时结果
+                }
                 recognition.continuous = false;
                 recognition.interimResults = false;
                 recognition.lang = 'zh-CN';
@@ -754,11 +766,17 @@
             }
         }
         
+        // 用户交互状态
+        let hasUserInteracted = false;
+        
         // === 大脑与语音 ===
         async function send() {
             const ipt = document.getElementById('ipt');
             const text = ipt.value.trim();
             if(!text) return;
+            
+            // 标记用户已交互
+            hasUserInteracted = true;
 
             addLog(text, 'user');
             ipt.value = '';
@@ -769,7 +787,6 @@
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
-                        // Authorization头由Netlify函数处理，前端不再发送
                     },
                     body: JSON.stringify({
                         model: 'deepseek-chat',
@@ -781,23 +798,20 @@
                 console.log("API响应状态:", res.status);
                 
                 if (!res.ok) {
-                    const errorText = await res.text();
-                    console.error("API错误响应:", errorText);
-                    throw new Error(`API错误: ${res.status} - ${errorText}`);
+                    throw new Error(`API错误: ${res.status}`);
                 }
                 
                 const data = await res.json();
-                console.log("API响应数据:", data);
                 
-                if (data.choices && data.choices.length > 0) {
+                if (data.choices?.length > 0) {
                     const reply = data.choices[0].message.content;
                     addLog(reply, 'sys');
                     
-                    // 尝试语音，但即使失败也要继续
+                    // 尝试语音播放
                     try {
                         speak(reply);
-                    } catch (speakError) {
-                        console.warn("语音功能不可用:", speakError);
+                    } catch (error) {
+                        console.warn("语音播放失败:", error);
                     }
                 } else {
                     throw new Error("API响应格式错误");
@@ -822,29 +836,112 @@
         }
 
         function speak(text) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-CN';
-            u.rate = 1.1;
+            console.log('尝试语音播放:', text);  // 调试日志
+            
+            // 详细检查语音API支持
+            if (!window.speechSynthesis) {
+                const error = '浏览器不支持Speech Synthesis API';
+                console.error(error);
+                addLog(error, 'sys');
+                return false;
+            }
 
-            u.onstart = () => {
-                // 关键修正：这里只改动画名，不改 src，不会导致重载
-                bot.animationName = "Wave"; // 说话时挥手/动作
-            };
+            // 检查语音合成是否可用
+            if (speechSynthesis.pending || speechSynthesis.speaking) {
+                console.log('语音引擎忙，取消当前播放');
+                window.speechSynthesis.cancel();
+            }
 
-            u.onend = () => {
-                bot.animationName = "Idle"; // 说完恢复待机
-            };
+            try {
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                console.log('设备类型:', isMobile ? '移动端' : 'PC端');
 
-            window.speechSynthesis.speak(u);
+                const utterance = new SpeechSynthesisUtterance(text);
+                console.log('语音实例创建成功');
+                
+                utterance.lang = 'zh-CN';
+                utterance.rate = isMobile ? 1.0 : 1.1;
+                console.log('语音参数设置完成');
+
+                // 事件监听
+                utterance.onstart = () => {
+                    console.log('语音开始播放');
+                    bot.animationName = "Wave";
+                };
+
+                utterance.onend = () => {
+                    console.log('语音播放结束');
+                    bot.animationName = "Idle";
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('语音播放错误:', event.error);
+                    let errorMsg = `播放失败: ${event.error}`;
+                    if (isMobile) {
+                        errorMsg += ' - 请检查手机媒体音量/浏览器权限';
+                    }
+                    addLog(errorMsg, 'sys');
+                };
+
+                // 关键播放操作
+                console.log('开始执行speak方法');
+                window.speechSynthesis.speak(utterance);
+                console.log('speak方法调用完成');
+                
+                return true;
+            } catch (error) {
+                console.error('语音播放异常:', error);
+                let errorMsg = '语音功能异常';
+                
+                // 详细错误分类
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = '浏览器禁止自动播放，请手动触发';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMsg = '当前语音引擎不支持';
+                }
+                
+                addLog(`${errorMsg} (${error.message || '无详细信息'})`, 'sys');
+                return false;
+            }
         }
 
         function addLog(txt, type) {
             const div = document.createElement('div');
             div.className = `msg ${type}`;
-            div.innerText = txt;
+            
+            // 系统消息添加播放按钮
+            if (type === 'sys') {
+                const playBtn = document.createElement('button');
+                playBtn.className = 'btn btn-sm btn-outline-secondary ms-3';
+                playBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                playBtn.onclick = () => speak(txt);
+                playBtn.title = '播放语音';
+                
+                const content = document.createElement('span');
+                content.innerText = txt;
+                
+                div.appendChild(content);
+                div.appendChild(playBtn);
+            } else {
+                div.innerText = txt;
+            }
+            
             document.getElementById('logs').appendChild(div);
             document.getElementById('logs').scrollTop = 9999;
+        }
+
+        // 更新播放按钮样式
+        function updatePlayButton(text, button) {
+            if (speechSynthesis.speaking && 
+                speechSynthesis.currentUtterance?.text === text) {
+                button.innerHTML = '<i class="fas fa-stop"></i>';
+                button.classList.add('btn-danger');
+                button.classList.remove('btn-outline-secondary');
+            } else {
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+                button.classList.remove('btn-danger');
+                button.classList.add('btn-outline-secondary');
+            }
         }
 
         // 回车发送
