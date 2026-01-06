@@ -867,15 +867,53 @@
                         errorMsg = "语音朗读被中断";
                     } else if (event.error === 'synthesis-failed') {
                         errorMsg = "语音生成失败";
+                    } else if (isMobile) {
+                        errorMsg = "请在手机设置中允许浏览器使用扬声器，并确保没有静音";
                     }
                     addLog(errorMsg, 'sys');
                 };
 
-                window.speechSynthesis.speak(utterance);
+                // 移动端需要用户交互才能播放音频
+                if (isMobile) {
+                    // 创建透明覆盖层引导用户点击
+                    const overlay = document.createElement('div');
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.backgroundColor = 'rgba(0,0,0,0.01)';
+                    overlay.style.zIndex = '10000';
+                    overlay.style.display = 'flex';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.alignItems = 'center';
+                    overlay.innerHTML = `
+                        <div style="background: white; padding: 20px; border-radius: 10px; text-align: center;">
+                            <p>请点击此处允许语音播放</p>
+                            <button style="padding: 8px 16px; background: #000; color: white; border: none; border-radius: 5px;">
+                                允许播放
+                            </button>
+                        </div>
+                    `;
+                    
+                    overlay.querySelector('button').onclick = () => {
+                        document.body.removeChild(overlay);
+                        window.speechSynthesis.speak(utterance);
+                    };
+                    
+                    document.body.appendChild(overlay);
+                } else {
+                    window.speechSynthesis.speak(utterance);
+                }
+                
                 return true;
             } catch (error) {
                 console.error("语音合成初始化失败:", error);
-                addLog("语音朗读功能初始化失败", 'sys');
+                let errorMsg = "语音朗读功能初始化失败";
+                if (isMobile) {
+                    errorMsg += " - 请检查手机是否静音或浏览器权限设置";
+                }
+                addLog(errorMsg, 'sys');
                 return false;
             }
         }
