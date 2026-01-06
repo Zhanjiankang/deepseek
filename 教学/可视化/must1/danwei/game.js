@@ -19,7 +19,8 @@ class PhysicsGame {
         this.defeatAudio = new Audio('defeat.mp3'); // 游戏失败音频
         this.errorAudio = new Audio('error.wav'); // 匹配错误音频
         this.correctAudio = new Audio('correct.wav'); // 匹配正确音频
-        this.backgroundMusic = document.getElementById('backgroundMusic'); // 背景音乐
+        this.backgroundMusic = new Audio('background.mp3'); // 背景音乐
+        this.backgroundMusic.loop = true;
         
         // 设置初始音量
         this.countdownAudio.volume = this.volume+0.1;
@@ -31,7 +32,7 @@ class PhysicsGame {
         // 设置背景音乐循环
         if (this.backgroundMusic) {
             this.backgroundMusic.loop = true;
-            this.backgroundMusic.volume = this.volume * 0.2; // 背景音乐音量较低
+            this.backgroundMusic.volume = this.volume * 0.2 ; // 背景音乐音量较低
         }
         
         this.init();
